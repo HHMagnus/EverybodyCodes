@@ -26,23 +26,22 @@ fn main() {
 
 	let vec = file.chars().into_iter().collect::<Vec<char>>();
 
-	let part2 = vec.as_slice().chunks(3).map(|xs| {
-		let x = xs[0];
-		let y = xs[1];
-		let z = xs[2];
+	let part3 = vec.as_slice().chunks(3).map(|chars| {
+		let x = chars[0];
+		let y = chars[1];
+		let z = chars[2];
 		let sum = num(x) + num(y) + num(z);
-		let xx = xs.iter().filter(|&&x| x == 'x').count();
-		println!("{}, {}", sum, xx);
-		if xx == 0 {
+		let xs = chars.iter().filter(|&&x| x == 'x').count();
+		if xs == 0 {
 			return sum + 6;
 		}
-		if xx == 1 {
+		if xs == 1 {
 			return sum + 2;
 		}
 		sum
 	}).sum::<usize>();
 
-	println!("Part 3: {}", part2);
+	println!("Part 3: {}", part3);
 }
 
 fn num(x: char) -> usize {
