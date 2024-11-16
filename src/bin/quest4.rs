@@ -19,7 +19,7 @@ fn part2() {
 
 	let res = solve1a2(file);
 
-	println!("Part 1: {:?}", res);
+	println!("Part 2: {:?}", res);
 }
 
 fn solve1a2(file: String) -> usize {
@@ -48,5 +48,5 @@ fn part3() {
 		avg += 1;
 	}
 
-	println!("Part 1: {:?}", res);
+	println!("Part 3: {:?}", res);
 }
