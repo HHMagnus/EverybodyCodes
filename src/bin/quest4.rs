@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::read_to_string, usize};
+use std::fs::read_to_string;
 
 fn main() {
 	part1();
