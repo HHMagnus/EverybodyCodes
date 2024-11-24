@@ -82,6 +82,8 @@ fn part3() {
 	
 	let mut filled = HashSet::new();
 
+	let mut leafs = Vec::new();
+
 	for input in &inputs {
 		let mut curr = (0, 0, 0);
 
@@ -99,21 +101,9 @@ fn part3() {
 				filled.insert(curr);
 			}
 		}
+
+		leafs.push(curr);
 	}
-	
-	let leafs = inputs.into_iter().map(|input|
-		input.into_iter().fold((0, 0, 0), |curr, (c, s)|
-			match c {
-				'U' => (curr.0, curr.1 + s, curr.2),
-				'D' => (curr.0, curr.1 - s, curr.2),
-				'R' => (curr.0 + s, curr.1, curr.2),
-				'L' => (curr.0 - s, curr.1, curr.2),
-				'F' => (curr.0, curr.1, curr.2 + s),
-				'B' => (curr.0, curr.1, curr.2 - s),
-				_ => panic!("Unknown {}", c),
-			}
-		)
-	).collect::<Vec<_>>();
 
 	let max_height = leafs.iter().map(|x| x.1).max().unwrap();
 
