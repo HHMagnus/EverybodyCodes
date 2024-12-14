@@ -58,7 +58,7 @@ fn part2() {
 	println!("");
 }
 
-fn rotate_all(map: &mut BTreeMap<(i32, i32), char>, command: &mut impl Iterator<Item = Rot>) {
+fn rotate_all<T: Copy>(map: &mut BTreeMap<(i32, i32), T>, command: &mut impl Iterator<Item = Rot>) {
 	let max_x = map.iter().map(|x| x.0.0).max().unwrap();
 	let max_y = map.iter().map(|x| x.0.1).max().unwrap();
 	for y in 0..=max_y {
@@ -105,15 +105,19 @@ fn part3() {
 	let lines = file.lines().collect::<Vec<_>>();
 
 	let mut map = lines[2..].into_iter().enumerate().flat_map(|(y, cs)| cs.chars().enumerate().map(move |(x, c)| ((x as i32, y as i32), c))).collect::<BTreeMap<_,_>>();
-
-	let mut i = 0;
-	while i < 1048576000 {
-		if i % 1000 == 0 {
-			println!("{}", i);
+	let mut rotator = lines[2..].into_iter().enumerate().flat_map(|(y, cs)| cs.chars().enumerate().map(move |(x, c)| ((x as i32, y as i32), (x as i32, y as i32)))).collect::<BTreeMap<_,_>>();
+	let mut command = lines[0].chars().map(|x| if x == 'R' { Rot::Right } else if x == 'L' { Rot::Left } else { panic!("wtf is {}", x)}).cycle();
+	rotate_all(&mut rotator, &mut command);
+	
+	let mut exponent = 1;
+	let total = 1048576000;
+	while exponent < total {
+		let clone = rotator.clone();
+		if exponent & total != 0 {
+			move_map(&mut map, &clone);
 		}
-		let mut command = lines[0].chars().map(|x| if x == 'R' { Rot::Right } else if x == 'L' { Rot::Left } else { panic!("wtf is {}", x)}).cycle();
-		rotate_all(&mut map, &mut command);
-		i += 1;
+		move_map(&mut rotator, &clone);
+		exponent *= 2;
 	}
 
 	let max_x = map.iter().map(|x| x.0.0).max().unwrap();
@@ -126,4 +130,17 @@ fn part3() {
 		println!("");
 	}
 	println!("");
+}
+
+fn move_map<T: Copy>(map: &mut BTreeMap<(i32, i32), T>, rotator: &BTreeMap<(i32, i32), (i32, i32)>) {
+	let original = map.clone();
+
+	let max_x = map.iter().map(|x| x.0.0).max().unwrap();
+	let max_y = map.iter().map(|x| x.0.1).max().unwrap();
+	for y in 0..=max_y {
+		for x in 0..=max_x {
+			let key = (x, y);
+			*map.get_mut(&key).unwrap() = original[&rotator[&key]];
+		}
+	}
 }
