@@ -1,3 +1,4 @@
+use std::collections::{HashMap, VecDeque};
 use std::fs::read_to_string;
 
 #[derive(Debug)]
@@ -12,9 +13,27 @@ struct Line {
 }
 
 fn main() {
-    let file = read_to_string("input.txt").unwrap();
+    let file = read_to_string("input1.txt").unwrap();
 
-    let matrix = file.lines()
+    let matrix = input(file);
+
+    let part1 = matrix.into_iter()
+        .map(|x| x.calc1())
+        .collect::<Vec<_>>();
+
+    println!("Part 1: {:?}", part1.iter().max().unwrap());
+
+    let file = read_to_string("input2.txt").unwrap();
+    let matrix = input(file);
+    let part2 = matrix.into_iter()
+        .map(|x| x.calc2())
+        .collect::<Vec<_>>();
+
+    println!("Part 2: {:?}", part2.iter().max().unwrap());
+}
+
+fn input(file: String) -> Vec<Line> {
+    file.lines()
         .map(|line| line.split(" ")
             .map(|word| word.split("=").last().unwrap())
             .collect::<Vec<&str>>())
@@ -27,30 +46,64 @@ fn main() {
             z: vec[5].parse().unwrap(),
             m: vec[6].parse().unwrap(),
         })
-        .collect::<Vec<_>>();
-
-    let scores = matrix.into_iter()
-        .map(|x| x.calc())
-        .collect::<Vec<_>>();
-
-    println!("Part 1: {:?}", scores.iter().max().unwrap());
+        .collect::<Vec<_>>()
 }
 
 impl Line {
-    fn calc(&self) -> u64 {
-        let p1 = eni(self.a, self.x, self.m);
-        let p2 = eni(self.b, self.y, self.m);
-        let p3 = eni(self.c, self.z, self.m);
+    fn calc1(&self) -> u64 {
+        let p1 = eni1(self.a, self.x, self.m);
+        let p2 = eni1(self.b, self.y, self.m);
+        let p3 = eni1(self.c, self.z, self.m);
+        p1 + p2 + p3
+    }
+
+    fn calc2(&self) -> u64 {
+        let p1 = eni2(self.a, self.x, self.m);
+        let p2 = eni2(self.b, self.y, self.m);
+        let p3 = eni2(self.c, self.z, self.m);
         p1 + p2 + p3
     }
 }
 
-fn eni(n: u64, exp: u64, mod_: u64) -> u64 {
+fn eni1(n: u64, exp: u64, mod_: u64) -> u64 {
     let mut remainder = Vec::new();
     let mut score = 1;
     for _ in 0..exp {
         score = (score * n) % mod_;
         remainder.push(score);
+    }
+    remainder.reverse();
+    remainder.into_iter()
+        .map(|i|i.to_string())
+        .collect::<Vec<String>>()
+        .join("")
+        .parse()
+        .unwrap()
+}
+
+fn eni2(n: u64, exp: u64, mod_: u64) -> u64 {
+    let mut prev = HashMap::new();
+    let mut remainder = Vec::new();
+    let mut score = 1;
+    let mut iterations = exp;
+    let mut skip = false;
+    while iterations > 0 {
+        score = (score * n) % mod_;
+        if iterations <= 5 {
+            remainder.push(score);
+        }
+        if iterations > 5 && !skip && prev.contains_key(&score) {
+            let prev_i = prev.get(&score).unwrap();
+            let dist = prev_i - iterations;
+            iterations %= dist;
+            while iterations <= 5 {
+                iterations += dist;
+            }
+            skip = true;
+        } else {
+            prev.insert(score, iterations);
+        }
+        iterations -= 1;
     }
     remainder.reverse();
     remainder.into_iter()
