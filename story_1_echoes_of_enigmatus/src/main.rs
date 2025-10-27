@@ -30,6 +30,14 @@ fn main() {
         .collect::<Vec<_>>();
 
     println!("Part 2: {:?}", part2.iter().max().unwrap());
+
+    let file = read_to_string("input3.txt").unwrap();
+    let matrix = input(file);
+    let part3 = matrix.into_iter()
+        .map(|x| x.calc3())
+        .collect::<Vec<_>>();
+
+    println!("Part 3: {:?}", part3.iter().max().unwrap());
 }
 
 fn input(file: String) -> Vec<Line> {
@@ -61,6 +69,13 @@ impl Line {
         let p1 = eni2(self.a, self.x, self.m);
         let p2 = eni2(self.b, self.y, self.m);
         let p3 = eni2(self.c, self.z, self.m);
+        p1 + p2 + p3
+    }
+
+    fn calc3(&self) -> u64 {
+        let p1 = eni3(self.a, self.x, self.m);
+        let p2 = eni3(self.b, self.y, self.m);
+        let p3 = eni3(self.c, self.z, self.m);
         p1 + p2 + p3
     }
 }
@@ -112,4 +127,38 @@ fn eni2(n: u64, exp: u64, mod_: u64) -> u64 {
         .join("")
         .parse()
         .unwrap()
+}
+
+fn eni3(n: u64, exp: u64, mod_: u64) -> u64 {
+    let mut prev = HashMap::new();
+    let mut remainder = HashMap::new();
+    let mut score = 1;
+    let mut iterations = exp;
+    let mut skip = false;
+    let mut sum = 0;
+    while iterations > 0 {
+        score = (score * n) % mod_;
+        remainder.insert(iterations, score);
+        if iterations > 5 && !skip && prev.contains_key(&score) {
+            let prev_i = *prev.get(&score).unwrap();
+            let dist = prev_i - iterations;
+            let mut dist_sum = 0;
+            for i in iterations..prev_i {
+                dist_sum += remainder.get(&i).unwrap();
+            }
+            let mut dist_added = iterations / dist;
+            iterations %= dist;
+            while iterations <= 5 {
+                iterations += dist;
+                dist_added -= 1;
+            }
+            sum += dist_sum * dist_added;
+            skip = true;
+        } else {
+            prev.insert(score, iterations);
+        }
+        sum += score;
+        iterations -= 1;
+    }
+    sum
 }
