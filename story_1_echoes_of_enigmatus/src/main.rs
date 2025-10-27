@@ -14,9 +14,7 @@ struct Line {
 
 fn main() {
     let file = read_to_string("input1.txt").unwrap();
-
     let matrix = input(file);
-
     let part1 = matrix.into_iter()
         .map(|x| x.calc1())
         .collect::<Vec<_>>();
