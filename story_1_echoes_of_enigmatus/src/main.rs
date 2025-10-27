@@ -2,7 +2,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::read_to_string;
 
 #[derive(Debug)]
-struct Line {
+struct Formula {
     a: u64,
     b: u64,
     c: u64,
@@ -14,36 +14,24 @@ struct Line {
 
 fn main() {
     let file = read_to_string("input1.txt").unwrap();
-    let matrix = input(file);
-    let part1 = matrix.into_iter()
-        .map(|x| x.calc1())
-        .collect::<Vec<_>>();
-
-    println!("Part 1: {:?}", part1.iter().max().unwrap());
+    let part1 = Formula::solve(file, eni1);
+    println!("Part 1: {}", part1);
 
     let file = read_to_string("input2.txt").unwrap();
-    let matrix = input(file);
-    let part2 = matrix.into_iter()
-        .map(|x| x.calc2())
-        .collect::<Vec<_>>();
-
-    println!("Part 2: {:?}", part2.iter().max().unwrap());
+    let part2 = Formula::solve(file, eni2);
+    println!("Part 2: {}", part2);
 
     let file = read_to_string("input3.txt").unwrap();
-    let matrix = input(file);
-    let part3 = matrix.into_iter()
-        .map(|x| x.calc3())
-        .collect::<Vec<_>>();
-
-    println!("Part 3: {:?}", part3.iter().max().unwrap());
+    let part3 = Formula::solve(file, eni3);
+    println!("Part 3: {}", part3);
 }
 
-fn input(file: String) -> Vec<Line> {
+fn parse_input_file(file: String) -> Vec<Formula> {
     file.lines()
         .map(|line| line.split(" ")
             .map(|word| word.split("=").last().unwrap())
             .collect::<Vec<&str>>())
-        .map(|vec| Line {
+        .map(|vec| Formula {
             a: vec[0].parse().unwrap(),
             b: vec[1].parse().unwrap(),
             c: vec[2].parse().unwrap(),
@@ -55,38 +43,45 @@ fn input(file: String) -> Vec<Line> {
         .collect::<Vec<_>>()
 }
 
-impl Line {
-    fn calc1(&self) -> u64 {
-        let p1 = eni1(self.a, self.x, self.m);
-        let p2 = eni1(self.b, self.y, self.m);
-        let p3 = eni1(self.c, self.z, self.m);
-        p1 + p2 + p3
+impl Formula {
+    fn solve<F>(file: String, f: F) -> u64
+    where
+        F: Fn(u64, u64, u64) -> u64,
+        F: Copy
+    {
+        let formulas = parse_input_file(file);
+        *formulas.into_iter()
+            .map(|formula| formula.calc(f))
+            .collect::<Vec<_>>()
+            .iter()
+            .max()
+            .unwrap()
     }
 
-    fn calc2(&self) -> u64 {
-        let p1 = eni2(self.a, self.x, self.m);
-        let p2 = eni2(self.b, self.y, self.m);
-        let p3 = eni2(self.c, self.z, self.m);
-        p1 + p2 + p3
-    }
-
-    fn calc3(&self) -> u64 {
-        let p1 = eni3(self.a, self.x, self.m);
-        let p2 = eni3(self.b, self.y, self.m);
-        let p3 = eni3(self.c, self.z, self.m);
+    fn calc<F>(&self, f: F) -> u64
+    where
+        F: Fn(u64, u64, u64) -> u64,
+    {
+        let p1 = f(self.a, self.x, self.m);
+        let p2 = f(self.b, self.y, self.m);
+        let p3 = f(self.c, self.z, self.m);
         p1 + p2 + p3
     }
 }
 
 fn eni1(n: u64, exp: u64, mod_: u64) -> u64 {
-    let mut remainder = Vec::new();
+    let mut remainders = Vec::new();
     let mut score = 1;
     for _ in 0..exp {
         score = (score * n) % mod_;
-        remainder.push(score);
+        remainders.push(score);
     }
-    remainder.reverse();
-    remainder.into_iter()
+    remainders.reverse();
+    remainders_to_number(remainders)
+}
+
+fn remainders_to_number(remainders: Vec<u64>) -> u64 {
+    remainders.into_iter()
         .map(|i|i.to_string())
         .collect::<Vec<String>>()
         .join("")
@@ -95,68 +90,69 @@ fn eni1(n: u64, exp: u64, mod_: u64) -> u64 {
 }
 
 fn eni2(n: u64, exp: u64, mod_: u64) -> u64 {
-    let mut prev = HashMap::new();
-    let mut remainder = Vec::new();
+    let mut score_to_iteration_seen = HashMap::new();
+    let mut remainders = Vec::new();
     let mut score = 1;
-    let mut iterations = exp;
-    let mut skip = false;
-    while iterations > 0 {
+    let mut remaining_iterations = exp;
+    let mut previously_used_cycle = false;
+    while remaining_iterations > 0 {
         score = (score * n) % mod_;
-        if iterations <= 5 {
-            remainder.push(score);
+        if remaining_iterations <= 5 {
+            remainders.push(score);
         }
-        if iterations > 5 && !skip && prev.contains_key(&score) {
-            let prev_i = prev.get(&score).unwrap();
-            let dist = prev_i - iterations;
-            iterations %= dist;
-            while iterations <= 5 {
-                iterations += dist;
+        if remaining_iterations > 5
+            && !previously_used_cycle
+            && score_to_iteration_seen.contains_key(&score)
+        {
+            let cycle_start_iterations = score_to_iteration_seen.get(&score).unwrap();
+            let cycle_size = cycle_start_iterations - remaining_iterations;
+            remaining_iterations %= cycle_size;
+            while remaining_iterations <= 5 {
+                remaining_iterations += cycle_size;
             }
-            skip = true;
+            previously_used_cycle = true;
         } else {
-            prev.insert(score, iterations);
+            score_to_iteration_seen.insert(score, remaining_iterations);
         }
-        iterations -= 1;
+        remaining_iterations -= 1;
     }
-    remainder.reverse();
-    remainder.into_iter()
-        .map(|i|i.to_string())
-        .collect::<Vec<String>>()
-        .join("")
-        .parse()
-        .unwrap()
+    remainders.reverse();
+    remainders_to_number(remainders)
 }
 
 fn eni3(n: u64, exp: u64, mod_: u64) -> u64 {
-    let mut prev = HashMap::new();
-    let mut remainder = HashMap::new();
+    let mut score_to_iteration_seen = HashMap::new();
+    let mut iterations_to_remainder = HashMap::new();
     let mut score = 1;
-    let mut iterations = exp;
-    let mut skip = false;
-    let mut sum = 0;
-    while iterations > 0 {
+    let mut remaining_iterations = exp;
+    let mut previously_used_cycle = false;
+    let mut total_sum = 0;
+    while remaining_iterations > 0 {
         score = (score * n) % mod_;
-        remainder.insert(iterations, score);
-        if iterations > 5 && !skip && prev.contains_key(&score) {
-            let prev_i = *prev.get(&score).unwrap();
-            let dist = prev_i - iterations;
-            let mut dist_sum = 0;
-            for i in iterations..prev_i {
-                dist_sum += remainder.get(&i).unwrap();
+        iterations_to_remainder.insert(remaining_iterations, score);
+        if remaining_iterations > 5
+            && !previously_used_cycle
+            && score_to_iteration_seen.contains_key(&score)
+        {
+            let cycle_start_iterations = *score_to_iteration_seen.get(&score).unwrap();
+            let cycle_size = cycle_start_iterations - remaining_iterations;
+            let mut cycle_sum = 0;
+            for i in remaining_iterations..cycle_start_iterations {
+                cycle_sum += iterations_to_remainder.get(&i).unwrap();
             }
-            let mut dist_added = iterations / dist;
-            iterations %= dist;
-            while iterations <= 5 {
-                iterations += dist;
-                dist_added -= 1;
+            let mut cycle_usage = remaining_iterations / cycle_size;
+            remaining_iterations %= cycle_size;
+            while remaining_iterations <= 5 {
+                remaining_iterations += cycle_size;
+                cycle_usage -= 1;
             }
-            sum += dist_sum * dist_added;
-            skip = true;
+            total_sum += cycle_sum * cycle_usage;
+            previously_used_cycle = true;
         } else {
-            prev.insert(score, iterations);
+            score_to_iteration_seen.insert(score, remaining_iterations);
         }
-        sum += score;
-        iterations -= 1;
+        total_sum += score;
+        remaining_iterations -= 1;
     }
-    sum
+    total_sum
 }
