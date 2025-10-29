@@ -1,6 +1,8 @@
+use std::cell::{Ref, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 use std::ops::Deref;
+use std::rc::Rc;
 
 type Swaps = HashSet<u64>;
 
@@ -12,15 +14,16 @@ struct Node {
     left_letter: char,
     right_value: u64,
     right_letter: char,
-    left: Option<Box<Node>>,
-    right: Option<Box<Node>>,
+    partner: Option<Rc<RefCell<Node>>>,
+    left: Option<Rc<RefCell<Node>>>,
+    right: Option<Rc<RefCell<Node>>>,
 }
 
 #[derive(Debug, Clone)]
 struct Add {
     id: u64,
-    left: Node,
-    right: Node,
+    left: Rc<RefCell<Node>>,
+    right: Rc<RefCell<Node>>,
 }
 
 #[derive(Debug, Clone)]
@@ -89,8 +92,8 @@ fn solve(file: String) -> String {
     while let Some(element) = iterator.next() {
         match element {
             Instruction::Add(add) => {
-                left.insert(add.left, &swaps);
-                right.insert(add.right, &swaps);
+                left.borrow_mut().insert(add.left, &swaps);
+                right.borrow_mut().insert(add.right, &swaps);
             }
             Instruction::Swap(swap) => {
                 if swaps.contains(&swap.id) {
@@ -102,21 +105,43 @@ fn solve(file: String) -> String {
         }
     }
 
-    format!("{}{}", left.traverse(&swaps), right.traverse(&swaps))
+    format!("{}{}", left.borrow().traverse(&swaps), right.borrow().traverse(&swaps))
 }
 
 impl Node {
-    fn new(id: u64, is_left: bool, left_value: u64, left_letter: char, right_value: u64, right_letter: char) -> Node {
-        Node {
+    fn new(id: u64, left_value: u64, left_letter: char, right_value: u64, right_letter: char)
+        -> (Rc<RefCell<Node>>, Rc<RefCell<Node>>) {
+        let left_node = Node {
             id,
-            is_left,
+            is_left: true,
             left_value,
             left_letter,
             right_value,
             right_letter,
+            partner: None,
             left: None,
             right: None,
-        }
+        };
+        let left_node = Rc::new(RefCell::new(left_node));
+        let right_node = Node {
+            id,
+            is_left: false,
+            left_value,
+            left_letter,
+            right_value,
+            right_letter,
+            partner: None,
+            left: None,
+            right: None,
+        };
+        let right_node = Rc::new(RefCell::new(right_node));
+        left_node.borrow_mut().set_partner(right_node.clone());
+        right_node.borrow_mut().set_partner(left_node.clone());
+        (left_node, right_node)
+    }
+
+    fn set_partner(&mut self, partner: Rc<RefCell<Node>>) {
+        self.partner = Some(partner);
     }
 
     fn is_left(&self, swaps: &Swaps) -> bool {
@@ -142,18 +167,18 @@ impl Node {
         }
     }
 
-    fn insert(&mut self, node: Node, swaps: &Swaps) {
-        if node.get_value(swaps) < self.get_value(swaps) {
+    fn insert(&mut self, node: Rc<RefCell<Node>>, swaps: &Swaps) {
+        if node.borrow().get_value(swaps) < self.get_value(swaps) {
             if self.left.is_some() {
-                self.left.as_mut().unwrap().insert(node, swaps);
+                self.left.as_mut().unwrap().borrow_mut().insert(node, swaps);
             } else {
-                self.left = Some(Box::new(node));
+                self.left = Some(node.clone());
             }
         } else {
             if self.right.is_some() {
-                self.right.as_mut().unwrap().insert(node, swaps);
+                self.right.as_mut().unwrap().borrow_mut().insert(node, swaps);
             } else {
-                self.right = Some(Box::new(node));
+                self.right = Some(node.clone());
             }
         }
     }
@@ -173,10 +198,10 @@ impl Node {
             map.insert(depth, elements.clone());
             let mut new_elements = Vec::new();
             for element in elements {
-                if let Some(x) = element.left {
+                if let Some(x) = element.borrow().left.clone() {
                     new_elements.push(x.deref().clone());
                 }
-                if let Some(x) = element.right {
+                if let Some(x) = element.borrow().right.clone() {
                     new_elements.push(x.deref().clone());
                 }
             }
@@ -189,16 +214,17 @@ impl Node {
             .unwrap()
             .1
             .into_iter()
-            .map(|n| n.get_letter(swaps)).collect()
+            .map(|n| n.borrow().get_letter(swaps)).collect()
     }
 }
 
 impl Add {
     fn new(id: u64, left_num: u64, left_char: char, right_num: u64, right_char: char) -> Self {
+        let (left, right) = Node::new(id, left_num, left_char, right_num, right_char);
         Add {
             id,
-            left: Node::new(id, true, left_num, left_char, right_num, right_char),
-            right: Node::new(id, false, left_num, left_char, right_num, right_char),
+            left,
+            right,
         }
     }
 }
