@@ -60,7 +60,17 @@ impl Instruction {
 }
 
 fn main() {
+    let file = read_to_string("input/quest2/input1.txt").unwrap();
+    let part1 = solve(file);
+    println!("Part 1: {}", part1);
+
     let file = read_to_string("input/quest2/input2.txt").unwrap();
+    let part2 = solve(file);
+    println!("Part 2: {}", part2);
+
+}
+
+fn solve(file: String) -> String {
     let input = file.lines()
         .map(|line| Instruction::parse(line))
         .collect::<Vec<_>>();
@@ -92,7 +102,7 @@ fn main() {
         }
     }
 
-    println!("{}{}", left.traverse(&swaps), right.traverse(&swaps));
+    format!("{}{}", left.traverse(&swaps), right.traverse(&swaps))
 }
 
 impl Node {
