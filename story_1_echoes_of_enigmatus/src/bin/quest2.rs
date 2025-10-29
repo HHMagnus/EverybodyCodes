@@ -1,82 +1,154 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 use std::ops::Deref;
 
+type Swaps = HashSet<u64>;
+
 #[derive(Debug, Clone)]
 struct Node {
-    value: u64,
-    letter: char,
+    id: u64,
+    is_left: bool,
+    left_value: u64,
+    left_letter: char,
+    right_value: u64,
+    right_letter: char,
     left: Option<Box<Node>>,
     right: Option<Box<Node>>,
 }
 
 #[derive(Debug, Clone)]
-struct NoteLine {
+struct Add {
     id: u64,
     left: Node,
     right: Node,
 }
 
+#[derive(Debug, Clone)]
+struct Swap {
+    id: u64,
+}
+
+#[derive(Debug, Clone)]
+enum Instruction {
+    Add(Add),
+    Swap(Swap),
+}
+
+impl Instruction {
+    fn parse(input: &str) -> Instruction {
+        let line = input.split(" ").collect::<Vec<_>>();
+        let instruction = line[0];
+        if instruction == "SWAP" {
+            let id = line[1].parse().unwrap();
+            return Instruction::Swap(Swap { id });
+        }
+        let left = line[2].replace("left=[", "")
+            .replace("]", "");
+        let mut left = left.split(",");
+        let right = line[3].replace("right=[", "")
+            .replace("]", "");
+        let mut right = right.split(",");
+        let add = Add::new(
+            line[1].split("=").last().unwrap().parse::<u64>().unwrap(),
+            left.next().unwrap().parse::<u64>().unwrap(),
+            left.next().unwrap().chars().next().unwrap(),
+            right.next().unwrap().parse::<u64>().unwrap(),
+            right.next().unwrap().chars().next().unwrap(),
+        );
+        Instruction::Add(add)
+    }
+}
+
 fn main() {
-    let file = read_to_string("input/quest2/input1.txt").unwrap();
+    let file = read_to_string("input/quest2/input2.txt").unwrap();
     let input = file.lines()
-        .map(|line| line.split(" ").collect::<Vec<_>>())
-        .map(|line| {
-            let left = line[2].replace("left=[", "")
-                .replace("]", "");
-            let mut left = left.split(",");
-            let right = line[3].replace("right=[", "")
-                .replace("]", "");
-            let mut right = right.split(",");
-            NoteLine::new(
-                line[1].split("=").last().unwrap().parse::<u64>().unwrap(),
-                left.next().unwrap().parse::<u64>().unwrap(),
-                left.next().unwrap().chars().next().unwrap(),
-                right.next().unwrap().parse::<u64>().unwrap(),
-                right.next().unwrap().chars().next().unwrap(),
-            )
-        }).collect::<Vec<_>>();
+        .map(|line| Instruction::parse(line))
+        .collect::<Vec<_>>();
 
     let mut iterator = input.into_iter();
 
+    let mut swaps = HashSet::new();
+
     let first = iterator.next().unwrap();
+    let first = match first {
+        Instruction::Add(add) => add,
+        _ => unreachable!("First should always be Add variant"),
+    };
     let mut left = first.left;
     let mut right = first.right;
     while let Some(element) = iterator.next() {
-        left.insert(element.left);
-        right.insert(element.right);
+        match element {
+            Instruction::Add(add) => {
+                left.insert(add.left, &swaps);
+                right.insert(add.right, &swaps);
+            }
+            Instruction::Swap(swap) => {
+                if swaps.contains(&swap.id) {
+                    swaps.remove(&swap.id);
+                } else {
+                    swaps.insert(swap.id);
+                }
+            }
+        }
     }
 
-    println!("{}{}", left.traverse(), right.traverse());
+    println!("{}{}", left.traverse(&swaps), right.traverse(&swaps));
 }
 
 impl Node {
-    fn new(value: u64, letter: char) -> Node {
+    fn new(id: u64, is_left: bool, left_value: u64, left_letter: char, right_value: u64, right_letter: char) -> Node {
         Node {
-            value,
-            letter,
+            id,
+            is_left,
+            left_value,
+            left_letter,
+            right_value,
+            right_letter,
             left: None,
             right: None,
         }
     }
 
-    fn insert(&mut self, node: Node) {
-        if node.value < self.value {
+    fn is_left(&self, swaps: &Swaps) -> bool {
+        if swaps.contains(&self.id) {
+            return !self.is_left;
+        }
+        self.is_left
+    }
+
+    fn get_value(&self, swaps: &Swaps) -> u64 {
+        if self.is_left(swaps) {
+            self.left_value
+        } else {
+            self.right_value
+        }
+    }
+
+    fn get_letter(&self, swaps: &Swaps) -> char {
+        if self.is_left(swaps) {
+            self.left_letter
+        } else {
+            self.right_letter
+        }
+    }
+
+    fn insert(&mut self, node: Node, swaps: &Swaps) {
+        if node.get_value(swaps) < self.get_value(swaps) {
             if self.left.is_some() {
-                self.left.as_mut().unwrap().insert(node);
+                self.left.as_mut().unwrap().insert(node, swaps);
             } else {
                 self.left = Some(Box::new(node));
             }
         } else {
             if self.right.is_some() {
-                self.right.as_mut().unwrap().insert(node);
+                self.right.as_mut().unwrap().insert(node, swaps);
             } else {
                 self.right = Some(Box::new(node));
             }
         }
     }
 
-    fn traverse(&self) -> String {
+    fn traverse(&self, swaps: &Swaps) -> String {
         let mut depth = 0;
         let mut elements = Vec::new();
         if let Some(x) = &self.left {
@@ -91,10 +163,10 @@ impl Node {
             map.insert(depth, elements.clone());
             let mut new_elements = Vec::new();
             for element in elements {
-                if let Some(x) = element.right {
+                if let Some(x) = element.left {
                     new_elements.push(x.deref().clone());
                 }
-                if let Some(x) = element.left {
+                if let Some(x) = element.right {
                     new_elements.push(x.deref().clone());
                 }
             }
@@ -102,24 +174,21 @@ impl Node {
             depth += 1;
         }
 
-        let part1 = map.into_iter()
-            .max_by_key(|(_k, v)| v.len());
-        let binding = part1.unwrap();
-        let mut part1 = binding
+        map.into_iter()
+            .max_by_key(|(_k, v)| v.len())
+            .unwrap()
             .1
-            .iter()
-            .collect::<Vec<_>>();
-        part1.sort_by_key(|n| n.value);
-        part1.into_iter().map(|n| n.letter).collect()
+            .into_iter()
+            .map(|n| n.get_letter(swaps)).collect()
     }
 }
 
-impl NoteLine {
+impl Add {
     fn new(id: u64, left_num: u64, left_char: char, right_num: u64, right_char: char) -> Self {
-        NoteLine {
+        Add {
             id,
-            left: Node::new(left_num, left_char),
-            right: Node::new(right_num, right_char),
+            left: Node::new(id, true, left_num, left_char, right_num, right_char),
+            right: Node::new(id, false, left_num, left_char, right_num, right_char),
         }
     }
 }
