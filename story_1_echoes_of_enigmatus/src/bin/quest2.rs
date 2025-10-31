@@ -1,10 +1,12 @@
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
-use std::ops::Deref;
 use std::rc::Rc;
 
-type Swaps = HashSet<u64>;
+struct Swaps {
+    set: HashSet<u64>,
+    move_tree: bool,
+}
 
 #[derive(Debug, Clone)]
 struct Node {
@@ -64,23 +66,30 @@ impl Instruction {
 
 fn main() {
     let file = read_to_string("input/quest2/input1.txt").unwrap();
-    let part1 = solve(file);
+    let part1 = solve(file, false);
     println!("Part 1: {}", part1);
 
     let file = read_to_string("input/quest2/input2.txt").unwrap();
-    let part2 = solve(file);
+    let part2 = solve(file, false);
     println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest2/input3.txt").unwrap();
+    let part3 = solve(file, true);
+    println!("Part 3: {}", part3);
 
 }
 
-fn solve(file: String) -> String {
+fn solve(file: String, move_tree: bool) -> String {
     let input = file.lines()
         .map(|line| Instruction::parse(line))
         .collect::<Vec<_>>();
 
     let mut iterator = input.into_iter();
 
-    let mut swaps = HashSet::new();
+    let mut swaps = Swaps {
+        set: HashSet::new(),
+        move_tree,
+    };
 
     let first = iterator.next().unwrap();
     let first = match first {
@@ -96,11 +105,13 @@ fn solve(file: String) -> String {
                 right.borrow_mut().insert(add.right, &swaps);
             }
             Instruction::Swap(swap) => {
-                if swaps.contains(&swap.id) {
-                    swaps.remove(&swap.id);
-                } else {
-                    swaps.insert(swap.id);
+                if move_tree && swap.id == first.id {
+                    let temp = left;
+                    left = right;
+                    right = temp;
+                    continue;
                 }
+                swaps.swap(&swap.id);
             }
         }
     }
@@ -108,6 +119,31 @@ fn solve(file: String) -> String {
     format!("{}{}", left.borrow().traverse(&swaps), right.borrow().traverse(&swaps))
 }
 
+impl Swaps {
+    fn swap(&mut self, id: &u64) {
+        if self.set.contains(&id) {
+            self.set.remove(&id);
+        } else {
+            self.set.insert(id.clone());
+        }
+    }
+
+    fn should_switch_value(&self, id: &u64) -> bool {
+        if (self.move_tree) {
+            false
+        } else {
+            self.set.contains(id)
+        }
+    }
+
+    fn should_switch_node(&self, id: &u64) -> bool {
+        if (self.move_tree) {
+            self.set.contains(id)
+        } else {
+            false
+        }
+    }
+}
 impl Node {
     fn new(id: u64, left_value: u64, left_letter: char, right_value: u64, right_letter: char)
         -> (Rc<RefCell<Node>>, Rc<RefCell<Node>>) {
@@ -145,7 +181,7 @@ impl Node {
     }
 
     fn is_left(&self, swaps: &Swaps) -> bool {
-        if swaps.contains(&self.id) {
+        if swaps.should_switch_value(&self.id) {
             return !self.is_left;
         }
         self.is_left
@@ -167,16 +203,34 @@ impl Node {
         }
     }
 
+    fn left(&self, swaps: &Swaps) -> Rc<RefCell<Node>> {
+        let actual_left = self.left.clone().unwrap().clone();
+        if swaps.should_switch_node(&actual_left.borrow().id) {
+            actual_left.borrow().partner.clone().unwrap().clone()
+        } else {
+            actual_left
+        }
+    }
+
+    fn right(&self, swaps: &Swaps) -> Rc<RefCell<Node>> {
+        let actual_right = self.right.clone().unwrap().clone();
+        if swaps.should_switch_node(&actual_right.borrow().id) {
+            actual_right.borrow().partner.clone().unwrap().clone()
+        } else {
+            actual_right
+        }
+    }
+
     fn insert(&mut self, node: Rc<RefCell<Node>>, swaps: &Swaps) {
         if node.borrow().get_value(swaps) < self.get_value(swaps) {
             if self.left.is_some() {
-                self.left.as_mut().unwrap().borrow_mut().insert(node, swaps);
+                self.left(swaps).borrow_mut().insert(node, swaps);
             } else {
                 self.left = Some(node.clone());
             }
         } else {
             if self.right.is_some() {
-                self.right.as_mut().unwrap().borrow_mut().insert(node, swaps);
+                self.right(swaps).borrow_mut().insert(node, swaps);
             } else {
                 self.right = Some(node.clone());
             }
@@ -186,11 +240,11 @@ impl Node {
     fn traverse(&self, swaps: &Swaps) -> String {
         let mut depth = 0;
         let mut elements = Vec::new();
-        if let Some(x) = &self.left {
-            elements.push(x.deref().clone());
+        if self.left.is_some() {
+            elements.push(self.left(swaps));
         }
-        if let Some(x) = &self.right {
-            elements.push(x.deref().clone());
+        if self.right.is_some() {
+            elements.push(self.right(swaps));
         }
         let mut map = HashMap::new();
 
@@ -198,19 +252,26 @@ impl Node {
             map.insert(depth, elements.clone());
             let mut new_elements = Vec::new();
             for element in elements {
-                if let Some(x) = element.borrow().left.clone() {
-                    new_elements.push(x.deref().clone());
+                if element.borrow().left.is_some() {
+                    new_elements.push(element.borrow().left(swaps));
                 }
-                if let Some(x) = element.borrow().right.clone() {
-                    new_elements.push(x.deref().clone());
+                if element.borrow().right.is_some() {
+                    new_elements.push(element.borrow().right(swaps));
                 }
             }
             elements = new_elements;
             depth += 1;
         }
 
+        let x = map.iter()
+            .map(|(_, v)| v.clone()
+                .into_iter()
+                .map(|n| n.borrow().get_letter(swaps)).collect::<String>())
+            .collect::<Vec<_>>();
+        println!("{:?}", x);
+
         map.into_iter()
-            .max_by_key(|(_k, v)| v.len())
+            .max_by_key(|(k, v)| (v.len(), -k))
             .unwrap()
             .1
             .into_iter()
