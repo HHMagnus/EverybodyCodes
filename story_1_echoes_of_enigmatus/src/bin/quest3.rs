@@ -1,5 +1,4 @@
 use std::cmp::min;
-use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::mem::swap;
 
@@ -37,7 +36,7 @@ fn main() {
 }
 
 fn part3(file: String) -> u64 {
-    let mut day_cycles = parse(file).into_iter()
+    let day_cycles = parse(file).into_iter()
         .map(|coord| {
             let mut c = coord;
             let mut day = 0;
