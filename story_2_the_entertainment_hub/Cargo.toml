@@ -1,0 +1,6 @@
+[package]
+name = "story_2_the_entertainment_hub"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
