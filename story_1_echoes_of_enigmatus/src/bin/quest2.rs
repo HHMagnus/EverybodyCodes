@@ -239,19 +239,19 @@ impl Node {
 
     fn traverse(&self, swaps: &Swaps) -> String {
         let mut depth = 0;
-        let mut elements = Vec::new();
+        let mut current_layer_elements = Vec::new();
         if self.left.is_some() {
-            elements.push(self.left(swaps));
+            current_layer_elements.push(self.left(swaps));
         }
         if self.right.is_some() {
-            elements.push(self.right(swaps));
+            current_layer_elements.push(self.right(swaps));
         }
-        let mut map = HashMap::new();
+        let mut depth_to_elements = HashMap::new();
 
-        while !elements.is_empty() {
-            map.insert(depth, elements.clone());
+        while !current_layer_elements.is_empty() {
+            depth_to_elements.insert(depth, current_layer_elements.clone());
             let mut new_elements = Vec::new();
-            for element in elements {
+            for element in current_layer_elements {
                 if element.borrow().left.is_some() {
                     new_elements.push(element.borrow().left(swaps));
                 }
@@ -259,18 +259,11 @@ impl Node {
                     new_elements.push(element.borrow().right(swaps));
                 }
             }
-            elements = new_elements;
+            current_layer_elements = new_elements;
             depth += 1;
         }
 
-        let x = map.iter()
-            .map(|(_, v)| v.clone()
-                .into_iter()
-                .map(|n| n.borrow().get_letter(swaps)).collect::<String>())
-            .collect::<Vec<_>>();
-        println!("{:?}", x);
-
-        map.into_iter()
+        depth_to_elements.into_iter()
             .max_by_key(|(k, v)| (v.len(), -k))
             .unwrap()
             .1
