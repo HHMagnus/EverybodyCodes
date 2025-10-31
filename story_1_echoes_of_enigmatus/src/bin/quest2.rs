@@ -129,7 +129,7 @@ impl Swaps {
     }
 
     fn should_switch_value(&self, id: &u64) -> bool {
-        if (self.move_tree) {
+        if self.move_tree {
             false
         } else {
             self.set.contains(id)
@@ -137,7 +137,7 @@ impl Swaps {
     }
 
     fn should_switch_node(&self, id: &u64) -> bool {
-        if (self.move_tree) {
+        if self.move_tree {
             self.set.contains(id)
         } else {
             false
