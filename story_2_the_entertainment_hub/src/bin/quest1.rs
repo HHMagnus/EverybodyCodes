@@ -8,11 +8,12 @@ enum Direction {
 }
 
 struct Machine {
-    matrix: HashMap<(i32, i32), Direction>,
+    matrix: HashMap<(i32, i32), bool>,
+    max_x: i32,
+    max_y: i32,
 }
 
-fn main() {
-    let file = read_to_string("input/quest1/input1.txt").unwrap();
+fn parse(file: String) -> (Machine, Vec<Vec<Direction>>) {
     let mut split = file.split("\n\n");
     let matrix_part = split.next().unwrap();
     let input_part = split.next().unwrap();
@@ -46,21 +47,28 @@ fn main() {
             .collect::<Vec<_>>())
         .collect::<Vec<_>>();
 
-    let mut coins = 0;
+    let machine = Machine {
+        matrix,
+        max_x,
+        max_y,
+    };
 
-    for (toss_slot, directions) in input.into_iter().enumerate() {
-        let toss_slot = toss_slot as i32;
+    (machine, input)
+}
+
+impl Machine {
+    fn play(&self, toss_slot: i32, directions: Vec<Direction>) -> i32 {
         let mut toss = (toss_slot * 2, 0);
 
         let mut directions = directions.into_iter();
 
-        while toss.1 <= max_y {
-            if matrix[&toss] {
+        while toss.1 <= self.max_y {
+            if self.matrix[&toss] {
                 let dir = directions.next().unwrap();
                 match dir {
                     Direction::Right => {
                         let mut x = toss.0 + 1;
-                        if x > max_x {
+                        if x > self.max_x {
                             x = toss.0 - 1;
                         }
                         toss = (x, toss.1);
@@ -82,9 +90,16 @@ fn main() {
         let final_slot = toss.0 / 2 + 1;
         let coins_won = ((final_slot * 2) - toss_slot).max(0);
 
-        println!("{} {} {}", toss_slot, final_slot, coins_won);
-        coins += coins_won;
+        coins_won
     }
+}
 
-    println!("Part 1: {}", coins);
+fn main() {
+    let file = read_to_string("input/quest1/input1.txt").unwrap();
+    let (machine, input) = parse(file);
+
+    let part1 = input.into_iter().enumerate()
+        .map(|(toss_slot, directions)| machine.play(toss_slot as i32, directions))
+        .sum::<i32>();
+    println!("Part 1: {}", part1);
 }
