@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::fs::read_to_string;
 
 #[derive(Debug, Clone)]
@@ -88,4 +89,43 @@ fn main() {
         .collect::<Vec<_>>();
     let part2 = scores.join(",");
     println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest3/input3.txt").unwrap();
+    let mut split = file.split("\n\n");
+    let mut dies = Die::parse(split.next().unwrap().to_string());
+    let map = split.next().unwrap()
+        .lines()
+        .enumerate()
+        .flat_map(|(y, line)| line
+            .chars()
+            .enumerate()
+            .map(move |(x, c)| ((x as i32, y as i32), c.to_digit(10).unwrap() as i64))
+        )
+        .collect::<HashMap<_, _>>();
+    let mut reached: HashSet<(i32, i32)> = HashSet::new();
+
+    for die in dies.iter_mut(){
+        let mut possibilities = map.keys().cloned().collect::<HashSet<_>>();
+
+        while !possibilities.is_empty() {
+            let roll = die.roll();
+            possibilities = possibilities.into_iter()
+                .filter(|xy| map[xy] == roll)
+                .collect();
+            reached.extend(possibilities.iter());
+            possibilities = possibilities.into_iter()
+                .flat_map(|xy| vec![
+                        xy,
+                        (xy.0 - 1, xy.1),
+                        (xy.0, xy.1 - 1),
+                        (xy.0 + 1, xy.1),
+                        (xy.0, xy.1 + 1),
+                    ]
+                    .into_iter()
+                    .filter(|xy| map.contains_key(xy)))
+                .collect();
+        }
+    }
+    println!("Part 3: {}", reached.len());
+
 }
