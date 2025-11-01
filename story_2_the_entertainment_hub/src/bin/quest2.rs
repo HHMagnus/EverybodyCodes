@@ -30,9 +30,8 @@ fn main() {
 
         let fluffbolt = cycle.next().unwrap();
 
-        while let (Some(b)) = balloons.pop() && b == fluffbolt {
-
-        }
+        while let Some(b) = balloons.pop()
+            && b == fluffbolt {}
     }
 
     println!("Part 1: {}", part1);
