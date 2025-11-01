@@ -2,6 +2,7 @@ use std::cmp::max;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
+#[derive(Debug, Copy, Clone)]
 enum Direction {
     Right,
     Left,
@@ -37,10 +38,6 @@ fn parse(file: String) -> (Machine, Vec<Vec<Direction>>) {
         .max()
         .unwrap();
 
-    let starts = (0..max_x).filter(|x| x % 2 == 0)
-        .map(|x| (x, -1))
-        .collect::<Vec<_>>();
-
     let input = input_part.lines()
         .map(|line| line.chars()
             .map(|c| if c == 'R' { Direction::Right } else { Direction::Left })
@@ -57,6 +54,13 @@ fn parse(file: String) -> (Machine, Vec<Vec<Direction>>) {
 }
 
 impl Machine {
+    fn best_play(&self, direction: Vec<Direction>) -> i32 {
+        (0..self.max_x/2+1)
+            .map(|toss_slot| self.play(toss_slot, direction.clone()))
+            .max()
+            .unwrap()
+    }
+
     fn play(&self, toss_slot: i32, directions: Vec<Direction>) -> i32 {
         let mut toss = (toss_slot * 2, 0);
 
@@ -102,4 +106,12 @@ fn main() {
         .map(|(toss_slot, directions)| machine.play(toss_slot as i32, directions))
         .sum::<i32>();
     println!("Part 1: {}", part1);
+    
+    let file = read_to_string("input/quest1/input2.txt").unwrap();
+    let (machine, input) = parse(file);
+
+    let part2 = input.into_iter()
+        .map(|directions| machine.best_play(directions))
+        .sum::<i32>();
+    println!("Part 2: {}", part2);
 }
