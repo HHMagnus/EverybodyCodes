@@ -27,8 +27,18 @@ fn main() {
     println!("Part 1: {}", part1);
 
     let file = read_to_string("input/quest2/input2.txt").unwrap();
-    let mut balloons = parse(file)
-        .repeat(100);
+    let balloons = parse(file);
+    let part2 = solve_circle(balloons, 100);
+    println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest2/input3.txt").unwrap();
+    let balloons = parse(file);
+    let part3 = solve_circle(balloons, 100000);
+    println!("Part 3: {}", part3);
+}
+
+fn solve_circle(balloons: Vec<Balloon>, size: usize) -> i32 {
+    let mut balloons = balloons.repeat(size);
 
     let mut cycle = fluffbolt_cycle();
     let mut part2 = 0;
@@ -46,7 +56,7 @@ fn main() {
         }
         balloons.remove(0);
     }
-    println!("Part 2: {}", part2);
+    part2
 }
 
 fn fluffbolt_cycle() -> Cycle<IntoIter<Balloon>> {
