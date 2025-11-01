@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Quest 2" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="buildProfileId" value="release" />
     <option name="command" value="run --package story_2_the_entertainment_hub --bin quest2" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />

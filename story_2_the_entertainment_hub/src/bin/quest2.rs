@@ -1,4 +1,5 @@
 use std::cmp::PartialEq;
+use std::collections::VecDeque;
 use std::fs::read_to_string;
 use std::iter::Cycle;
 use std::vec::IntoIter;
@@ -38,25 +39,30 @@ fn main() {
 }
 
 fn solve_circle(balloons: Vec<Balloon>, size: usize) -> i32 {
-    let mut balloons = balloons.repeat(size);
+    let mut side1: VecDeque<Balloon> = balloons.repeat(size/2).into();
+    let mut side2: VecDeque<Balloon> = balloons.repeat(size/2).into();
 
     let mut cycle = fluffbolt_cycle();
-    let mut part2 = 0;
-    while !balloons.is_empty() {
-        part2 += 1;
+    let mut result = 0;
+    while !side1.is_empty() {
+        result += 1;
         let fluffbolt = cycle.next().unwrap();
-        let balloon1 = balloons.get(0).unwrap();
+        let balloon1 = side1.get(0).unwrap();
 
         if &fluffbolt == balloon1 {
-            let another_balloon_in_sight = balloons.len() % 2 == 0;
+            let size = side1.len() + side2.len();
+            let another_balloon_in_sight = size % 2 == 0;
             if another_balloon_in_sight {
-                let second_hit = balloons.len() / 2;
-                balloons.remove(second_hit);
+                side2.pop_front().unwrap();
             }
         }
-        balloons.remove(0);
+        side1.pop_front().unwrap();
+
+        if side2.len() - side1.len() > 1 {
+            side1.push_back(side2.pop_front().unwrap());
+        }
     }
-    part2
+    result + side2.len() as i32
 }
 
 fn fluffbolt_cycle() -> Cycle<IntoIter<Balloon>> {
