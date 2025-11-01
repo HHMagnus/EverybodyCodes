@@ -54,6 +54,12 @@ fn parse(file: String) -> (Machine, Vec<Vec<Direction>>) {
 }
 
 impl Machine {
+    fn all_plays(&self, direction: Vec<Direction>) -> Vec<(i32, i32)> {
+        (0..self.max_x/2+1)
+            .map(|toss_slot| (toss_slot, self.play(toss_slot, direction.clone())))
+            .collect::<Vec<_>>()
+    }
+
     fn best_play(&self, direction: Vec<Direction>) -> i32 {
         (0..self.max_x/2+1)
             .map(|toss_slot| self.play(toss_slot, direction.clone()))
@@ -106,7 +112,7 @@ fn main() {
         .map(|(toss_slot, directions)| machine.play(toss_slot as i32, directions))
         .sum::<i32>();
     println!("Part 1: {}", part1);
-    
+
     let file = read_to_string("input/quest1/input2.txt").unwrap();
     let (machine, input) = parse(file);
 
@@ -114,4 +120,36 @@ fn main() {
         .map(|directions| machine.best_play(directions))
         .sum::<i32>();
     println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest1/input3.txt").unwrap();
+    let (machine, input) = parse(file);
+
+    let part3_input = input.into_iter()
+        .map(|directions| machine.all_plays(directions))
+        .collect::<Vec<_>>();
+    let part3_options = part3_input.iter()
+        .fold(vec![(Vec::new(), 0)], |acc, x| options(acc, x));
+    let part3_min = part3_options.iter()
+        .map(|x| x.1)
+        .min()
+        .unwrap();
+    let part3_max = part3_options.iter()
+        .map(|x| x.1)
+        .max()
+        .unwrap();
+    println!("Part 3: {} {}", part3_min, part3_max);
+}
+
+fn options(vec: Vec<(Vec<i32>, i32)>, input: &Vec<(i32, i32)>) -> Vec<(Vec<i32>, i32)> {
+    let mut result = Vec::new();
+    for (tosses, total) in vec {
+        for (toss, score) in input {
+            if (!tosses.contains(&toss)) {
+                let mut new_tosses = tosses.clone();
+                new_tosses.push(*toss);
+                result.push((new_tosses, score + total));
+            }
+        }
+    }
+    result
 }
