@@ -20,12 +20,22 @@ fn main() {
             let point = (x, y);
             if cycle100(point, 100000) {
                 part2 += 1;
-                print!("X");
-            } else {
-                print!(".");
             }
         }
-        print!("\n");
+    }
+    println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest2/input3.txt").unwrap();
+    let input = parse(file);
+
+    let mut part2 = 0;
+    for y in input.1..=input.1+1000 {
+        for x in input.0..=input.0+1000 {
+            let point = (x, y);
+            if cycle100(point, 100000) {
+                part2 += 1;
+            }
+        }
     }
     println!("Part 2: {}", part2);
 }
@@ -57,7 +67,7 @@ fn cycle(xy: (i64, i64), a: (i64, i64), division: i64) -> (i64, i64) {
 
 fn cycle100(xy: (i64, i64), division: i64) -> bool {
     let mut curr = xy;
-    for _ in 0..99 {
+    for _ in 1..100 {
         curr = cycle(curr, xy, division);
         if curr.0 > 1000000 || curr.1 > 1000000 || curr.0 < -1000000 || curr.1 < -1000000 {
             return false;
