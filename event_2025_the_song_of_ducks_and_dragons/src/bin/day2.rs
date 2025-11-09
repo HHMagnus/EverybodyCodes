@@ -1,7 +1,40 @@
-use std::fs::read_to_string;
+use event_2025_the_song_of_ducks_and_dragons::solve;
 
 fn main() {
-    let file = read_to_string("input/quest2/input1.txt").unwrap();
+    solve("2", part1, part2, part3);
+}
+
+fn part3(file: &str) -> i32 {
+    let input = parse(file);
+
+    let mut part2 = 0;
+    for y in input.1..=input.1 + 1000 {
+        for x in input.0..=input.0 + 1000 {
+            let point = (x, y);
+            if cycle100(point, 100000) {
+                part2 += 1;
+            }
+        }
+    }
+    part2
+}
+
+fn part2(file: &str) -> i32 {
+    let input = parse(file);
+
+    let mut part2 = 0;
+    for y in (input.1..=input.1 + 1000).step_by(10) {
+        for x in (input.0..=input.0 + 1000).step_by(10) {
+            let point = (x, y);
+            if cycle100(point, 100000) {
+                part2 += 1;
+            }
+        }
+    }
+    part2
+}
+
+fn part1(file: &str) -> String {
     let input = parse(file);
 
     let mut part1 = (0, 0);
@@ -9,38 +42,10 @@ fn main() {
         part1 = cycle(part1, input, 10);
     }
 
-    println!("Part 1: [{},{}]", part1.0, part1.1);
-
-    let file = read_to_string("input/quest2/input2.txt").unwrap();
-    let input = parse(file);
-
-    let mut part2 = 0;
-    for y in (input.1..=input.1+1000).step_by(10) {
-        for x in (input.0..=input.0+1000).step_by(10) {
-            let point = (x, y);
-            if cycle100(point, 100000) {
-                part2 += 1;
-            }
-        }
-    }
-    println!("Part 2: {}", part2);
-
-    let file = read_to_string("input/quest2/input3.txt").unwrap();
-    let input = parse(file);
-
-    let mut part2 = 0;
-    for y in input.1..=input.1+1000 {
-        for x in input.0..=input.0+1000 {
-            let point = (x, y);
-            if cycle100(point, 100000) {
-                part2 += 1;
-            }
-        }
-    }
-    println!("Part 2: {}", part2);
+    format!("Part 1: [{},{}]", part1.0, part1.1)
 }
 
-fn parse(file: String) -> (i64, i64) {
+fn parse(file: &str) -> (i64, i64) {
     let parsed = file.replace("A=[", "")
         .replace("]", "")
         .split(",")
