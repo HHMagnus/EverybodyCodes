@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Day 2" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+  <configuration default="false" name="Quest 2" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="buildProfileId" value="dev" />
-    <option name="command" value="run --bin day2" />
+    <option name="command" value="run --bin quest2" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />
