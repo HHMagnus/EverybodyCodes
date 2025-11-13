@@ -50,5 +50,22 @@ fn part2(file: &str) -> usize {
 }
 
 fn part3(file: &str) -> usize {
-    0
+    let nums = file.split(',').map(|s| s.parse().unwrap()).collect::<Vec<usize>>();
+    let strings = nums.windows(2)
+        .map(|w| (w[0], w[1]))
+        .collect::<Vec<_>>();
+    let mut res = 0;
+    let nails = 256;
+    for x1 in 1..=nails {
+        for x2 in 1..=nails {
+            let cross = strings.iter()
+                .filter(|&(y1, y2)|
+                    crosses((x1, x2), (*y1, *y2))
+                    || (x1 == *y1 && x2 == *y2) || (x1 == *y2 && x2 == *y1)
+                )
+                .count();
+            res = res.max(cross);
+        }
+    }
+    res
 }
