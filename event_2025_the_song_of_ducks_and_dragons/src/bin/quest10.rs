@@ -129,5 +129,88 @@ fn check_eaten(board: &HashMap<(i32, i32), Type>, dragon: &HashSet<(i32, i32)>, 
 }
 
 fn part3(file: &str) -> usize {
-    0
+    let board = parse(file);
+
+    let dragon = board.iter()
+        .find(|&(_, y)| *y == Type::Dragon)
+        .unwrap()
+        .0.clone();
+
+    let sheeps = board.iter()
+        .filter(|&(_, y)| *y == Type::Sheep)
+        .map(|(x, _)| *x)
+        .collect::<Vec<_>>();
+
+    let mut stuck = HashMap::new();
+
+    sheep_move(&board, sheeps, dragon, &mut stuck)
+}
+
+fn sheep_move(
+    board: &HashMap<(i32, i32), Type>,
+    sheeps: Vec<(i32, i32)>,
+    dragon: (i32, i32),
+    stuck: &mut HashMap<(Vec<(i32, i32)>, (i32, i32)), usize>
+) -> usize {
+    let mut moved = false;
+    let mut total = 0;
+
+    let max_y = board.iter()
+        .map(|x| x.0.1)
+        .max()
+        .unwrap();
+
+    for i in 0..sheeps.len() {
+        let sheep = sheeps[i].clone();
+        let sheep = (sheep.0, sheep.1 + 1);
+
+        if sheep.1 > max_y {
+            moved = true;
+            continue;
+        }
+
+        if dragon == sheep && board[&sheep] != Type::HideOut {
+            continue;
+        }
+
+        let mut new_sheeps = sheeps.clone();
+        new_sheeps[i] = sheep;
+        total += dragon_move(board, new_sheeps, dragon, stuck);
+        moved = true;
+    }
+
+    if moved {
+        total
+    } else {
+        dragon_move(board, sheeps, dragon, stuck)
+    }
+}
+
+fn dragon_move(
+    board: &HashMap<(i32, i32), Type>,
+    sheeps: Vec<(i32, i32)>,
+    dragon: (i32, i32),
+    stuck: &mut HashMap<(Vec<(i32, i32)>, (i32, i32)), usize>
+) -> usize {
+    mov(dragon).into_iter()
+        .filter(|xy| board.contains_key(xy))
+        .map(|xy| {
+            let sheeps = sheeps.iter()
+                .cloned()
+                .filter(|&sheep| xy != sheep || board[&sheep] == Type::HideOut)
+                .collect::<Vec<_>>();
+
+            if sheeps.len() == 0 {
+                return 1;
+            }
+
+            let key = (sheeps.clone(), xy);
+            if stuck.contains_key(&key) {
+                return stuck[&key];
+            }
+
+            let total = sheep_move(board, sheeps, xy, stuck);
+            stuck.insert(key, total);
+            total
+        }).sum()
 }
