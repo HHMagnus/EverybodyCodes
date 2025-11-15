@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use event_2025_the_song_of_ducks_and_dragons::solve;
 
 fn main() {
@@ -73,5 +74,42 @@ fn part2(file: &str) -> usize {
 }
 
 fn part3(file: &str) -> usize {
-    0
+    let ducks = parse(file);
+
+    let mut groups = Vec::new();
+    for x in 0..ducks.len() {
+        for y in x+1..ducks.len() {
+            for z in y+1..ducks.len() {
+                if let Some(_) = matches(&ducks[x].1, &ducks[y].1, &ducks[z].1) {
+                    let mut set = HashSet::new();
+                    set.insert(ducks[x].0);
+                    set.insert(ducks[y].0);
+                    set.insert(ducks[z].0);
+                    groups.push(set);
+                }
+            }
+        }
+    }
+
+    let mut group_size = 0;
+    while group_size != groups.iter().map(|x| x.len()).max().unwrap() {
+        group_size = groups.iter().map(|x| x.len()).max().unwrap();
+        groups = groups.iter()
+            .fold(groups.clone(), |mut acc: Vec<HashSet<usize>>, group| {
+                for g in acc.iter_mut() {
+                    if group.iter().any(|i| g.contains(&i)) {
+                        for c in group {
+                            g.insert(*c);
+                        }
+                    }
+                }
+                acc
+            });
+    }
+
+    groups.into_iter()
+        .max_by_key(|i| i.len())
+        .unwrap()
+        .into_iter()
+        .sum()
 }
