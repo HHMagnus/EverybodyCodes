@@ -34,17 +34,22 @@ where
 {
     let title = format!("Quest {} part {}", puzzle, part);
     let input = get_input(puzzle, part);
+    if input.is_none() {
+        println!("{}: skipping due to no key", title);
+        return;
+    }
+    let input = input.unwrap();
     solve_part(title, &input, solver);
 }
 
-fn get_input(quest: &str, part: &str) -> String {
+fn get_input(quest: &str, part: &str) -> Option<String> {
     let dir = format!("input/quest{}", quest);
     let file_name = format!("{}/input{}.txt", dir, part);
     let file = read_to_string(&file_name);
 
     if let Ok(file) = file {
         if !file.is_empty() {
-            return file;
+            return Some(file);
         }
     }
 
@@ -60,12 +65,17 @@ fn get_input(quest: &str, part: &str) -> String {
         "2" => input.1,
         "3" => input.2,
         _ => panic!("Unknown part {}", part)
-    }.expect(&format!("Quest {} part {} input not found", quest, part));
+    };
+
+    if output.is_none() {
+        return None;
+    }
+    let output = output.unwrap();
 
     std::fs::create_dir_all(&dir)
         .expect("Failed to create dir");
     std::fs::write(&file_name, &output)
         .expect("Unable to write file");
 
-    output
+    Some(output)
 }

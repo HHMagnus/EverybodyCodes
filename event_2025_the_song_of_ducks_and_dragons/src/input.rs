@@ -48,8 +48,6 @@ fn decrypt(client: &Client, quest: &str, uuid: &str, (input1, input2, input3): (
         .json::<serde_json::Value>()
         .expect("Deserialization (aes) failed");
 
-    println!("AES json: {:?}", aes_json);
-
     let key1 = aes_json.get("key1")
         .and_then(|v| v.as_str());
     let key2 = aes_json.get("key2")
@@ -60,9 +58,15 @@ fn decrypt(client: &Client, quest: &str, uuid: &str, (input1, input2, input3): (
     let input1 = input1
         .and_then(|input| key1
             .map(|key| decrypt_one(input, key)));
+    if key2.is_none() {
+        return (input1, None, None)
+    }
     let input2 = input2
         .and_then(|input| key2
             .map(|key| decrypt_one(input, key)));
+    if key3.is_none() {
+        return (input1, input2, None)
+    }
     let input3 = input3
         .and_then(|input| key3
             .map(|key| decrypt_one(input, key)));
@@ -71,7 +75,6 @@ fn decrypt(client: &Client, quest: &str, uuid: &str, (input1, input2, input3): (
 }
 
 fn decrypt_one(input: String, key: &str) -> String {
-    println!("Decrypting {}, {}", &input, key);
     let bytes = hex::decode(input)
         .expect("Decoding failed");
 
