@@ -51,7 +51,48 @@ fn part1(file: &str) -> usize {
 }
 
 fn part2(file: &str) -> usize {
-    0
+    let mut nums = file.split('\n')
+        .map(|n| n.parse::<i64>().unwrap())
+        .collect::<Vec<_>>();
+
+    let mut total = 0;
+
+    loop {
+        let mut moved = false;
+
+        for i in 1..nums.len() {
+            if nums[i - 1] > nums[i] {
+                nums[i - 1] -= 1;
+                nums[i] += 1;
+                moved = true;
+            }
+        }
+
+        if !moved {
+            break;
+        }
+
+        total += 1;
+    }
+
+    loop {
+        let mut moved = false;
+
+        for i in 1..nums.len() {
+            if nums[i - 1] < nums[i] {
+                nums[i - 1] += 1;
+                nums[i] -= 1;
+                moved = true;
+            }
+        }
+
+        if !moved {
+            break;
+        }
+        total += 1;
+    }
+
+    total
 }
 
 fn part3(file: &str) -> usize {
