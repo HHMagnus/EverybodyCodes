@@ -1,4 +1,3 @@
-use std::cmp::min;
 use event_2025_the_song_of_ducks_and_dragons::solve;
 
 fn main() {
@@ -96,61 +95,16 @@ fn part2(file: &str) -> usize {
     total
 }
 
-fn part3(file: &str) -> i64 {
-    let mut nums = file.split('\n')
-        .map(|n| n.parse::<i64>().unwrap())
+fn part3(file: &str) -> u64 {
+    let nums = file.split('\n')
+        .map(|n| n.parse::<u64>().unwrap())
         .collect::<Vec<_>>();
 
-    let mut total = 0;
+    let sum = nums.iter().sum::<u64>();
+    let mean = sum / nums.len() as u64;
 
-    loop {
-        let mut moved = false;
-
-        let amount = nums.windows(2)
-            .map(|w| w[1] - w[0])
-            .filter(|n| *n > 0)
-            .min()
-            .unwrap()
-            .min(1i64);
-
-        for i in 1..nums.len() {
-            if nums[i - 1] > nums[i] {
-                nums[i - 1] -= amount;
-                nums[i] += amount;
-                moved = true;
-            }
-        }
-
-        if !moved {
-            break;
-        }
-
-        total += amount;
-    }
-
-    loop {
-        let mut moved = false;
-
-        let amount = nums.windows(2)
-            .map(|w| w[1] - w[0])
-            .filter(|n| *n > 0)
-            .min()
-            .unwrap_or(1i64)
-            .min(1i64);
-
-        for i in 1..nums.len() {
-            if nums[i - 1] < nums[i] {
-                nums[i - 1] += amount;
-                nums[i] -= amount;
-                moved = true;
-            }
-        }
-
-        if !moved {
-            break;
-        }
-        total += amount;
-    }
-
-    total
+    nums.iter()
+        .filter(|&num| *num < mean)
+        .map(|num| num.abs_diff(mean))
+        .sum()
 }
