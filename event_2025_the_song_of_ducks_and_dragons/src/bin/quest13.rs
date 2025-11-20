@@ -27,6 +27,12 @@ fn part1(file: &str) -> usize {
 }
 
 fn part2(file: &str) -> usize {
+    let clock = parse_range_clock(file);
+
+    clock[20252025 % clock.len()]
+}
+
+fn parse_range_clock(file: &str) -> Vec<usize> {
     let nums = file.lines()
         .map(|line| {
             let mut split = line.split("-");
@@ -55,10 +61,11 @@ fn part2(file: &str) -> usize {
     behind.reverse();
     clock.append(&mut behind);
     drop(behind);
-
-    clock[20252025 % clock.len()]
+    clock
 }
 
 fn part3(file: &str) -> usize {
-    0
+    let clock = parse_range_clock(file);
+
+    clock[202520252025 % clock.len()]
 }
