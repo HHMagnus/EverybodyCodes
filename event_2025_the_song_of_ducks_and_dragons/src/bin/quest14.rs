@@ -1,5 +1,5 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
 use event_2025_the_song_of_ducks_and_dragons::solve;
+use std::collections::{BTreeSet, HashMap};
 
 fn main() {
     solve("14", part1, part2, part3);
