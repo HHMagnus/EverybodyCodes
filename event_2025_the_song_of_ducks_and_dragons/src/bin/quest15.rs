@@ -60,10 +60,40 @@ impl Direction {
 }
 
 fn part1(file: &str) -> usize {
-    let instructions = file.split(",")
-        .map(|line| Instruction::new(line))
-        .collect::<Vec<_>>();
+    solve_quest15(file)
+}
 
+fn shortest_path(end: &(i32, i32), walls: HashSet<(i32, i32)>, start: (i32, i32)) -> Option<usize> {
+    let mut queue = VecDeque::new();
+    queue.push_back((start, 0));
+    let mut visited = HashSet::new();
+
+    while let Some((pos, steps)) = queue.pop_front() {
+        if visited.contains(&pos) {
+            continue;
+        }
+        visited.insert(pos);
+
+        if &pos == end {
+            return Some(steps);
+        }
+        let (x, y) = pos;
+
+        [
+            (x, y - 1),
+            (x, y + 1),
+            (x - 1, y),
+            (x + 1, y),
+        ].into_iter()
+            .filter(|xy| !visited.contains(xy))
+            .filter(|xy| xy == end || !walls.contains(xy))
+            .for_each(|xy| queue.push_back((xy, steps + 1)));
+    }
+
+    None
+}
+
+fn walls(instructions: Vec<Instruction>) -> ((i32, i32), HashSet<(i32, i32)>) {
     let mut point = (0, 0);
     let mut dir = Direction::North;
 
@@ -82,43 +112,26 @@ fn part1(file: &str) -> usize {
             walls.insert(point);
         }
     }
-
-    let start = (0, 0);
-    let end = point;
-
-    let mut queue = VecDeque::new();
-    queue.push_back((start, 0));
-    let mut visited = HashSet::new();
-
-    while let Some((pos, steps)) = queue.pop_front() {
-        if visited.contains(&pos) {
-            continue;
-        }
-        visited.insert(pos);
-
-        if pos == end {
-            return steps;
-        }
-        let (x, y) = pos;
-
-        [
-            (x, y - 1),
-            (x, y + 1),
-            (x - 1, y),
-            (x + 1, y),
-        ].into_iter()
-            .filter(|xy| !visited.contains(xy))
-            .filter(|xy| xy == &end || !walls.contains(xy))
-            .for_each(|xy| queue.push_back((xy, steps + 1)));
-    }
-
-    panic!("No solution found!");
+    (point, walls)
 }
 
 fn part2(file: &str) -> usize {
-    0
+    solve_quest15(file)
+}
+
+fn solve_quest15(file: &str) -> usize {
+    let instructions = file.split(",")
+        .map(|line| Instruction::new(line))
+        .collect::<Vec<_>>();
+
+    let start = (0, 0);
+    let (end, walls) = walls(instructions);
+
+    let shortest_path = shortest_path(&end, walls, start);
+
+    shortest_path.expect("No solution found")
 }
 
 fn part3(file: &str) -> usize {
-    0
+    solve_quest15(file)
 }
