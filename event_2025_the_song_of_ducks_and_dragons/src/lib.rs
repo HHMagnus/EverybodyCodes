@@ -77,5 +77,7 @@ fn get_input(quest: &str, part: &str) -> Option<String> {
     std::fs::write(&file_name, &output)
         .expect("Unable to write file");
 
+    println!("Input file created: {}", file_name);
+
     Some(output)
 }
