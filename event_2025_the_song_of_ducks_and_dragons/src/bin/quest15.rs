@@ -23,6 +23,7 @@ impl Instruction {
     }
 }
 
+#[derive(Copy, Clone)]
 enum Direction {
     North,
     East,
@@ -49,12 +50,50 @@ impl Direction {
         }
     }
 
-    fn moves(&self, pos: (i32, i32)) -> (i32, i32) {
+    fn moves(&self, pos: (i32, i32), num: usize) -> (i32, i32) {
+        let num = num as i32;
         match self {
-            Direction::North => (pos.0, pos.1 - 1),
-            Direction::East => (pos.0 + 1, pos.1),
-            Direction::South => (pos.0, pos.1 + 1),
-            Direction::West => (pos.0 - 1, pos.1),
+            Direction::North => (pos.0, pos.1 - num),
+            Direction::East => (pos.0 + num, pos.1),
+            Direction::South => (pos.0, pos.1 + num),
+            Direction::West => (pos.0 - num, pos.1),
+        }
+    }
+}
+
+struct Wall {
+    start: (i32, i32),
+    direction: Direction,
+    length: usize,
+}
+
+impl Wall {
+    fn new(start: (i32, i32), direction: Direction, length: usize) -> Self {
+        Wall {
+            start,
+            direction,
+            length,
+        }
+    }
+
+    fn contains(&self, pos: &(i32, i32)) -> bool {
+        match self.direction {
+            Direction::North =>
+                pos.0 == self.start.0
+                    && self.start.1 >= pos.1
+                    && pos.1 >= self.start.1 - self.length as i32,
+            Direction::South =>
+                pos.0 == self.start.0
+                    && self.start.1 <= pos.1
+                    && pos.1 <= self.start.1 + self.length as i32,
+            Direction::East =>
+                pos.1 == self.start.1
+                    && self.start.0 <= pos.0
+                    && pos.0 <= self.start.0 + self.length as i32,
+            Direction::West =>
+                pos.1 == self.start.1
+                    && self.start.0 >= pos.0
+                    && pos.0 >= self.start.0 - self.length as i32,
         }
     }
 }
@@ -63,7 +102,7 @@ fn part1(file: &str) -> usize {
     solve_quest15(file)
 }
 
-fn shortest_path(end: &(i32, i32), walls: HashSet<(i32, i32)>, start: (i32, i32)) -> Option<usize> {
+fn shortest_path(end: &(i32, i32), walls: Vec<Wall>, start: (i32, i32)) -> Option<usize> {
     let mut queue = VecDeque::new();
     queue.push_back((start, 0));
     let mut visited = HashSet::new();
@@ -86,19 +125,18 @@ fn shortest_path(end: &(i32, i32), walls: HashSet<(i32, i32)>, start: (i32, i32)
             (x + 1, y),
         ].into_iter()
             .filter(|xy| !visited.contains(xy))
-            .filter(|xy| xy == end || !walls.contains(xy))
+            .filter(|xy| xy == end || !walls.iter().any(|wall| wall.contains(xy)))
             .for_each(|xy| queue.push_back((xy, steps + 1)));
     }
 
     None
 }
 
-fn walls(instructions: Vec<Instruction>) -> ((i32, i32), HashSet<(i32, i32)>) {
+fn walls(instructions: Vec<Instruction>) -> ((i32, i32), Vec<Wall>) {
     let mut point = (0, 0);
     let mut dir = Direction::North;
 
-    let mut walls = HashSet::new();
-    walls.insert(point);
+    let mut walls = Vec::new();
 
     for instruction in instructions {
         let num;
@@ -107,10 +145,9 @@ fn walls(instructions: Vec<Instruction>) -> ((i32, i32), HashSet<(i32, i32)>) {
             Instruction::Left(num) => (num, dir.left()),
         };
 
-        for _ in 0..num {
-            point = dir.moves(point);
-            walls.insert(point);
-        }
+        let wall = Wall::new(point, dir, num);
+        point = dir.moves(point, num);
+        walls.push(wall);
     }
     (point, walls)
 }
