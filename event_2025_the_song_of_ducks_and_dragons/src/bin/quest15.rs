@@ -1,5 +1,5 @@
-use std::collections::{HashSet, VecDeque};
 use event_2025_the_song_of_ducks_and_dragons::solve;
+use std::collections::{HashSet, VecDeque};
 
 fn main() {
     solve("15", part1, part2, part3);
@@ -108,25 +108,27 @@ fn shortest_path(end: &(i32, i32), walls: Vec<Wall>, start: (i32, i32)) -> Optio
     let mut visited = HashSet::new();
 
     while let Some((pos, steps)) = queue.pop_front() {
-        if visited.contains(&pos) {
-            continue;
-        }
-        visited.insert(pos);
-
-        if &pos == end {
-            return Some(steps);
-        }
         let (x, y) = pos;
 
-        [
+        for xy in [
             (x, y - 1),
             (x, y + 1),
             (x - 1, y),
             (x + 1, y),
-        ].into_iter()
-            .filter(|xy| !visited.contains(xy))
-            .filter(|xy| xy == end || !walls.iter().any(|wall| wall.contains(xy)))
-            .for_each(|xy| queue.push_back((xy, steps + 1)));
+        ] {
+            if &xy == end {
+                return Some(steps + 1);
+            }
+
+            if walls.iter().any(|wall| wall.contains(&xy)) {
+                continue
+            }
+
+            if !visited.contains(&xy) {
+                visited.insert(xy);
+                queue.push_back((xy, steps + 1))
+            }
+        }
     }
 
     None
