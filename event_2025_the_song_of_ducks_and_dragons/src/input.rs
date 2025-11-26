@@ -22,7 +22,7 @@ fn connect(client: &Client, uuid: &str) -> String {
 
 fn get_encrypted_input(client: &Client, quest: &str, seed: &str) -> (Option<String>, Option<String>, Option<String>) {
 
-    let input_url = format!("https://everybody-codes.b-cdn.net/assets/2025/{}/input/{}.json", quest, seed);
+    let input_url = format!("https://everybody.codes/assets/2025/{}/input/{}.json", quest, seed);
     let input = client.get(input_url)
         .send()
         .expect("Connection (input) failed")
