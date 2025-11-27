@@ -99,14 +99,57 @@ fn part2(file: &str) -> i64 {
         .sum()
 }
 
-fn part3(file: &str) -> i32 {
+fn part3(file: &str) -> i64 {
     let (plants, activations) = Plant::parse(file);
+
+    let optimal_activations = calculate_optimal_activation(&plants);
+
+    let optimal = activate(&plants, optimal_activations);
 
     let ducks = activations.into_iter()
         .map(|activation| activate(&plants, activation))
         .filter(|&x| x != 0)
         .collect::<Vec<_>>();
 
+    println!("{:?}", optimal);
+    println!("{:?}", ducks);
 
-    123
+    ducks.into_iter()
+        .map(|duck| optimal - duck)
+        .sum()
+}
+
+fn calculate_optimal_activation(plants: &Vec<Plant>) -> Vec<i64> {
+    // The solution assumes that all plants always gives either a positive or negative input.
+    // This is not a general solution, but it fits the input data
+    let mut map = HashMap::new();
+    for plant in plants {
+        for branch in &plant.branches {
+            match branch {
+                Branch::Free(_) => {
+                    map.insert(plant.id, Vec::new());
+                }
+                Branch::Other(id, thickness) => {
+                    if map.contains_key(id) {
+                        map.get_mut(&id).unwrap().push(*thickness)
+                    }
+                }
+            }
+        }
+    }
+    let mut optimal = map.into_iter()
+        .map(|(i, v)| {
+            if v.iter().all(|i| *i > 0) {
+                (i, 1)
+            } else if v.iter().all(|i| *i < 0) {
+                (i, 0)
+            } else {
+                panic!("Expected all free branches to be either positive or negative outcome only");
+            }
+        }).collect::<Vec<_>>();
+    optimal.sort_by(|a, b| a.0.cmp(&b.0));
+    let optimal = optimal.into_iter()
+        .map(|(_, x)| x)
+        .collect::<Vec<_>>();
+    optimal
 }
