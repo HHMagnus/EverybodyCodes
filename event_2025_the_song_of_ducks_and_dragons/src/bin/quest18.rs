@@ -111,9 +111,6 @@ fn part3(file: &str) -> i64 {
         .filter(|&x| x != 0)
         .collect::<Vec<_>>();
 
-    println!("{:?}", optimal);
-    println!("{:?}", ducks);
-
     ducks.into_iter()
         .map(|duck| optimal - duck)
         .sum()
