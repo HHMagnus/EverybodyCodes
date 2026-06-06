@@ -1,0 +1,39 @@
+HEADS AAAAA
+
+START =**** START ~**** RRRRS
+START #**** START ***** RRRRS
+START _**** DS ***** DRLSS
+
+DS ***** DS2 ***** LLLLS
+DS2 ***** D ***** LLLLS
+
+D *~~~* D ~**** LLLLS
+D *~~#* D ***** LLLLS
+D *~#~* D ***** LLLLS
+D *#~~* D ***** LLLLS
+D *#~#* D ***** LLLLS
+D *~##* D ***** LLLLS
+D *##~* D ***** LLLLS
+D *###* D ***** LLLLS
+
+D **_** R ***** DDDSS
+
+R *~~!* R ~**** RRRRS
+R *__!* R ***** RRRRS
+R *_~!* R ***** RRRRS
+R *~_!* R ***** RRRRS
+
+R ***_* LS ***** LLLLR
+
+LS ****_ STOP ***** SSSSS
+LS ****! L ***** DDDSS
+
+L *~~!* L ~**** LLLLS
+L *__!* L ***** LLLLS
+L *_~!* L ***** LLLLS
+L *~_!* L ***** LLLLS
+
+L ***_* RS ***** RRRRR
+
+RS ****_ STOP ***** SSSSS
+RS ****! R ***** DDDSS
