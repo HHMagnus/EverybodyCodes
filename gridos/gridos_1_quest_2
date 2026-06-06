@@ -1,0 +1,19 @@
+HEADS A
+
+START A START _ R
+START B START P R
+START C C1 P D
+C1 * C2 P D
+C2 * C3 P U
+C3 * C4 * U
+C4 * START * R
+START D D1 P D
+D1 * D2 P D
+D2 * D3 P D
+D3 * D4 P D
+D4 * D5 P U
+D5 * D6 * U
+D6 * D7 * U
+D7 * D8 * U
+D8 * START * R
+START _ STOP * L

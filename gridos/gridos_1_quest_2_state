@@ -1,0 +1,25 @@
+HEADS AB
+
+START ** UP ** SU
+UP *! UP ** SR
+UP A_ D __ DS
+UP B_ D _P DR
+UP C_ DRAW2 _P DR
+UP D_ DRAW4 _P DR
+
+D *! D ** SR
+D __ GO_UP ** US
+D A_ GO_UP _* US
+D B_ GO_UP _P UR
+D C_ DRAW2 _P SR
+D D_ DRAW4 _P SR
+
+GO_UP ** UP ** RS
+
+DRAW4 *_ DRAW3 *P SR
+DRAW3 *_ DRAW2 *P SR
+DRAW2 *_ DRAW1 *P SR
+DRAW1 *_ D *P SR
+
+UP __ STOP ** SS
+
