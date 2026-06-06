@@ -1,0 +1,14 @@
+HEADS AA
+
+START ** F ** SR
+
+F !! F ** RR
+F !_ D ** LL
+D =| D2 |_ LL
+D2 =| D ** LL
+D2 #| D ** SS
+D2 #= D ** LL
+D == D ** LL
+D #! F ** DD
+
+F __ STOP ** SS
