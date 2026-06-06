@@ -1,0 +1,37 @@
+HEADS AAAC
+
+START **** START2 **** SRDR
+START2 **** R1 **** SSSR
+
+R1 AA** R2 ***@ SSSR
+R1 BB** R2 ***@ SSSR
+R1 AB** R2 **** SSSS
+R1 BA** R2 **** SSSS
+R1 *_** R2 **** SSSS
+R2 *!_* R1 _*** RRRS
+R2 A!A* R1 _**@ RRRR
+R2 B!B* R1 _**@ RRRR
+R2 A!B* R1 _*** RRRS
+R2 B!A* R1 _*** RRRS
+R2 A_A* L1 _**@ DDDR
+R2 B_B* L1 _**@ DDDR
+R2 A_B* L1 _*** DDDS
+R2 B_A* L1 _*** DDDS
+R2 !___ STOP _*** SSSS
+
+L1 AA** L2 ***@ SSSR
+L1 BB** L2 ***@ SSSR
+L1 AB** L2 **** SSSS
+L1 BA** L2 **** SSSS
+L1 !__* L1 **** LLLS
+L1 _!_* DR *_** DDDS
+L1 !_!* L2 **** SSSS
+L2 !*_* L1 *_** LLLS
+L2 A*A* L1 *_*@ LLLR
+L2 B*B* L1 *_*@ LLLR
+L2 A*B* L1 *_** LLLS
+L2 B*A* L1 *_** LLLS
+L2 _!_* DR *_** DDDS
+
+DR *_** STOP **** RRRS
+DR *!** R1 **** RRRS
