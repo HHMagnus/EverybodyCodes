@@ -1,5 +1,5 @@
 use event_2025_the_song_of_ducks_and_dragons::solve;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 fn main() {
     solve("15", part1, part2, part3);
@@ -103,30 +103,70 @@ fn part1(file: &str) -> usize {
 }
 
 fn shortest_path(end: &(i32, i32), walls: Vec<Wall>, start: (i32, i32)) -> Option<usize> {
+    let mut xs = vec![start.0, end.0];
+    let mut ys = vec![start.1, end.1];
+
+    for wall in &walls {
+        let wall_end = wall.direction.moves(wall.start, wall.length);
+        xs.push(wall.start.0);
+        xs.push(wall_end.0);
+        ys.push(wall.start.1);
+        ys.push(wall_end.1);
+    }
+
+    let mut xs = xs.iter().flat_map(|&x| [x - 1, x, x + 1]).collect::<Vec<_>>();
+    let mut ys = ys.iter().flat_map(|&y| [y - 1, y, y + 1]).collect::<Vec<_>>();
+
+    xs.sort();
+    xs.dedup();
+    ys.sort();
+    ys.dedup();
+
+    let xi = xs.iter().enumerate().map(|(i, &v)| (v, i)).collect::<HashMap<_, _>>();
+    let yi = ys.iter().enumerate().map(|(i, &v)| (v, i)).collect::<HashMap<_, _>>();
+
+    let compress = |(x, y): (i32, i32)| -> (usize, usize) {
+        (xi[&x], yi[&y])
+    };
+
+    let start = compress(start);
+
     let mut queue = VecDeque::new();
     queue.push_back((start, 0));
     let mut visited = HashSet::new();
+    visited.insert(start);
 
-    while let Some((pos, steps)) = queue.pop_front() {
-        let (x, y) = pos;
+    while let Some(((x, y), steps)) = queue.pop_front() {
+        let real_pos = (xs[x], ys[y]);
 
-        for xy in [
-            (x, y - 1),
-            (x, y + 1),
+        let neighbours = [
             (x - 1, y),
             (x + 1, y),
-        ] {
-            if &xy == end {
-                return Some(steps + 1);
+            (x, y - 1),
+            (x, y + 1),
+        ];
+
+        for (nx, ny) in neighbours {
+            if nx > xs.len() || ny > ys.len() {
+                continue;
             }
 
-            if walls.iter().any(|wall| wall.contains(&xy)) {
-                continue
+            let next_real = (xs[nx], ys[ny]);
+
+            let cost = ((next_real.0 - real_pos.0).abs()
+                + (next_real.1 - real_pos.1).abs()) as usize;
+
+            if next_real == *end {
+                return Some(steps + cost);
             }
 
-            if !visited.contains(&xy) {
-                visited.insert(xy);
-                queue.push_back((xy, steps + 1))
+            if walls.iter().any(|w| w.contains(&next_real)) {
+                continue;
+            }
+
+            if !visited.contains(&(nx, ny)) {
+                visited.insert((nx, ny));
+                queue.push_back(((nx, ny), steps + cost));
             }
         }
     }
