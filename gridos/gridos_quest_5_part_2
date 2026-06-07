@@ -1,0 +1,37 @@
+HEADS AA
+
+START ** START2 ++ RD
+START2 ** UP ** SR
+
+UP !@ UP +* RR
+UP !. GO_DOWN1 +* DS
+
+GO_DOWN1 .. GO_DOWN2 ++ DS
+GO_DOWN2 .+ DOWN +* RR
+
+DOWN !@ DOWN +* RR
+DOWN !. GO_UP1 +* US
+DOWN __ LEG2 ** SS
+
+GO_UP1 .. GO_UP2 ++ US
+GO_UP2 .+ UP +* RR
+
+LEG2 __ LEG2 ** LL
+LEG2 .+ LEG2 ** UD
+LEG2 ++ LEG2 ** DD
+LEG2 +. D_LEFT ** LL
+
+D_LEFT .@ D_GO_DOWN +* LS
+D_GO_DOWN +@ D_DOWN +* DS
+D_GO_DOWN .@ D_DOWN +* DS
+
+D_DOWN .@ D_DOWN +* DD
+D_DOWN .+ D_DOWN +* DD
+D_DOWN .. D_RIGHT ++ RR
+D_DOWN __ STOP ** SS
+
+D_RIGHT +. D_R_DOWN ++ DD
+
+D_R_DOWN @. D_R_DOWN @+ DD
+D_R_DOWN .. D_DOWN ++ LL
+

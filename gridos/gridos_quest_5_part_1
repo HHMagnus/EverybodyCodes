@@ -1,0 +1,19 @@
+HEADS AA
+
+START ** START2 ++ RD
+START2 ** UP ** SR
+
+UP !@ UP +* RR
+UP !. GO_DOWN1 +* DS
+UP __ STOP ** SS
+
+GO_DOWN1 .. GO_DOWN2 ++ DS
+GO_DOWN2 .+ DOWN +* RR
+
+DOWN !@ DOWN +* RR
+DOWN !. GO_UP1 +* US
+DOWN __ STOP ** SS
+
+GO_UP1 .. GO_UP2 ++ US
+GO_UP2 .+ UP +* RR
+

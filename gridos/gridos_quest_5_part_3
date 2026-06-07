@@ -1,0 +1,69 @@
+HEADS AA
+
+START ** START2 ++ RD
+START2 ** UP ** SR
+
+UP !@ UP +* RR
+UP !. GO_DOWN1 +* DS
+
+GO_DOWN1 .. GO_DOWN2 ++ DS
+GO_DOWN2 .+ DOWN +* RR
+
+DOWN !@ DOWN +* RR
+DOWN !. GO_UP1 +* US
+DOWN __ LEG2 ** SS
+
+GO_UP1 .. GO_UP2 ++ US
+GO_UP2 .+ UP +* RR
+
+// LEG 2
+LEG2 __ LEG2 ** LL
+LEG2 .+ LEG2 ** UD
+LEG2 ++ LEG2 ** DD
+LEG2 +. D_LEFT ** LL
+
+D_LEFT .@ D_GO_DOWN +* LS
+D_GO_DOWN +@ D_DOWN +* DS
+D_GO_DOWN .@ D_DOWN +* DS
+
+D_DOWN .@ D_DOWN +* DD
+D_DOWN .+ D_DOWN +* DD
+D_DOWN .. D_RIGHT ++ RR
+D_DOWN __ LEG3 ** SS
+
+D_RIGHT +. D_R_DOWN ++ DD
+
+D_R_DOWN @. D_R_DOWN @+ DD
+D_R_DOWN .. D_DOWN ++ LL
+
+// Leg 3
+LEG3 __ LEG3 ** UU
+LEG3 ++ L_LEFT ** RU
+
+L_LEFT +@ L_LEFT ** LL
+L_LEFT .@ L_LEFT +* LL
+L_LEFT .+ L_LEFT ++ LL
+L_LEFT +. L_R_LEFT ++ UU
+L_LEFT .. L_R_LEFT ++ UU
+
+L_R_LEFT +. L_R_LEFT ++ LL
+L_R_LEFT ++ L_R_LEFT ++ LL
+L_R_LEFT @. L_R_LEFT *+ LL
+L_R_LEFT .. L_LEFT ++ DD
+L_R_LEFT __ LEG4 ** RR
+
+LEG4 __ LEG4 ** RR
+LEG4 ++ LEG4 ** RD
+LEG4 @+ U_UP ** LR
+
+U_UP +@ U_UP ** UU
+U_UP !. U_R_UP ++ RR
+U_UP .@ U_UP +* UU
+U_UP .+ U_UP +* UU
+U_UP ++ STOP ** SS
+
+U_R_UP ++ U_R_UP ** UU
+U_R_UP @. U_R_UP *+ UU
+U_R_UP +. U_R_UP *+ UU
+U_R_UP .+ U_UP ++ LL
+U_R_UP .. U_UP ++ LL
