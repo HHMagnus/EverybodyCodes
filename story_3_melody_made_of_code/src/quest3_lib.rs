@@ -42,30 +42,53 @@ impl Node {
         self.right_socket[0] == node.plug[0] || self.right_socket[1] == node.plug[1]
     }
 
-    fn insert(&mut self, node: Node, allow_weak_bonds: bool) -> bool {
+    fn is_strong_fit(&self, plug: &[String; 2]) -> bool {
+        &self.plug == plug
+    }
+
+    fn insert(&mut self, node: Node, allow_weak_bonds: bool, replace_weak: bool) -> Option<Node> {
+        println!("Inserting node {:?}", node);
         if self.left.is_none() && self.fits_left(&node, allow_weak_bonds) {
             self.left = Some(Box::new(node));
-            return true;
+            return None;
         }
 
-        if let Some(left) = &mut self.left {
-            if left.insert(node.clone(), allow_weak_bonds) {
-                return true;
+        let node = if let Some(left) = &mut self.left {
+            if replace_weak && !left.is_strong_fit(&self.left_socket) && node.is_strong_fit(&self.left_socket) {
+                println!("Replacing node {:?}, {:?}", left, node);
+                let prev_left = *left.clone();
+                self.left = Some(Box::new(node));
+                Some(prev_left)
+                //self.left.as_mut().unwrap().insert(prev_left, allow_weak_bonds, replace_weak)
+            } else {
+                left.insert(node, allow_weak_bonds, replace_weak)
             }
+        } else {
+            Some(node)
+        };
+
+        if node.is_none() {
+            return None;
         }
+        let node = node.unwrap();
+        println!("Inserting (right) node {:?}", node);
 
         if self.right.is_none() && self.fits_right(&node, allow_weak_bonds) {
             self.right = Some(Box::new(node));
-            return true;
+            return None;
         }
 
         if let Some(right) = &mut self.right {
-            if right.insert(node, allow_weak_bonds) {
-                return true;
+            if replace_weak && !right.is_strong_fit(&self.right_socket) && node.is_strong_fit(&self.right_socket) {
+                let prev_right = *right.clone();
+                self.right = Some(Box::new(node));
+                return Some(prev_right)
+                //self.right.as_mut().unwrap().insert(prev_right, allow_weak_bonds, replace_weak)
             }
+            return right.insert(node, allow_weak_bonds, replace_weak);
         }
 
-        false
+        Some(node)
     }
 
     fn path(&self, list: &mut Vec<i32>) {
@@ -79,13 +102,14 @@ impl Node {
     }
 }
 
-pub fn quest3_solve(file: String, allow_week_bonds: bool) -> i32 {
+pub fn quest3_solve(file: String, allow_week_bonds: bool, replace_weak: bool) -> i32 {
     let mut lines = quest3_parse(file).into_iter();
     let mut root = lines.next().unwrap();
 
     for node in lines {
-        if !root.insert(node.clone(), allow_week_bonds) {
-            panic!("Failed to insert node: {:?}!", node);
+        let mut node = node;
+        while let Some(returned_node) = root.insert(node, allow_week_bonds, replace_weak) {
+            node = returned_node;
         }
     }
 
