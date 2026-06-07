@@ -47,7 +47,6 @@ impl Node {
     }
 
     fn insert(&mut self, node: Node, allow_weak_bonds: bool, replace_weak: bool) -> Option<Node> {
-        println!("Inserting node {:?}", node);
         if self.left.is_none() && self.fits_left(&node, allow_weak_bonds) {
             self.left = Some(Box::new(node));
             return None;
@@ -55,11 +54,9 @@ impl Node {
 
         let node = if let Some(left) = &mut self.left {
             if replace_weak && !left.is_strong_fit(&self.left_socket) && node.is_strong_fit(&self.left_socket) {
-                println!("Replacing node {:?}, {:?}", left, node);
                 let prev_left = *left.clone();
                 self.left = Some(Box::new(node));
                 Some(prev_left)
-                //self.left.as_mut().unwrap().insert(prev_left, allow_weak_bonds, replace_weak)
             } else {
                 left.insert(node, allow_weak_bonds, replace_weak)
             }
@@ -71,7 +68,6 @@ impl Node {
             return None;
         }
         let node = node.unwrap();
-        println!("Inserting (right) node {:?}", node);
 
         if self.right.is_none() && self.fits_right(&node, allow_weak_bonds) {
             self.right = Some(Box::new(node));
@@ -82,8 +78,7 @@ impl Node {
             if replace_weak && !right.is_strong_fit(&self.right_socket) && node.is_strong_fit(&self.right_socket) {
                 let prev_right = *right.clone();
                 self.right = Some(Box::new(node));
-                return Some(prev_right)
-                //self.right.as_mut().unwrap().insert(prev_right, allow_weak_bonds, replace_weak)
+                return Some(prev_right);
             }
             return right.insert(node, allow_weak_bonds, replace_weak);
         }
