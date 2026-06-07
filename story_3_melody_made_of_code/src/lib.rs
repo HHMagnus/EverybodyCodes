@@ -69,7 +69,7 @@ pub fn quest2_add_cluster_if_surrounded(start: (i32, i32), visited: &mut HashSet
     let min_x = *visited.iter().map(|(x, _)| x).min().unwrap();
 
     while let Some(next) = queue.pop_front() {
-        if next.0 > max_y || next.0 < min_y || next.1 > max_x || next.1 < min_x {
+        if next.0 > max_x || next.0 < min_x || next.1 > max_y || next.1 < min_y {
             return;
         }
 
@@ -84,6 +84,7 @@ pub fn quest2_add_cluster_if_surrounded(start: (i32, i32), visited: &mut HashSet
             queue.push_back(pos);
         }
     }
+
 
     for x in visiting {
         visited.insert(x);
