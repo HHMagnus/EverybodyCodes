@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 
 fn main() {
-    let file = read_to_string("input/part1.txt").unwrap();
+    let file = read_to_string("input/quest1/part1.txt").unwrap();
 
     let input = file.lines().map(|line| {
         let mut split = line.split(":");
@@ -26,5 +26,5 @@ fn main() {
         .filter(|(_, nums)| nums[0] < nums[1] && nums[1] > nums[2])
         .map(|(num, _)| num)
         .sum::<i32>();
-    println!("Part 1: {}", result);
+    println!("Quest 1 part 1: {}", result);
 }

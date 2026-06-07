@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Part 3" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin part3" />
+  <configuration default="false" name="Quest 1 Part 2" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run --bin quest1_part2" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />

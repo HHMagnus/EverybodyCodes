@@ -14,7 +14,7 @@ enum Shine {
 }
 
 fn main() {
-    let file = read_to_string("input/part3.txt").unwrap();
+    let file = read_to_string("input/quest1/part3.txt").unwrap();
 
     let input = parse(file);
 
@@ -42,8 +42,6 @@ fn main() {
         }).collect::<Vec<_>>();
     list.sort_by(|(_, a), (_, b)| a.cmp(&b));
 
-    println!("{:?}", list);
-
     let result = list.chunk_by(|(_, x), (_, y)| x == y)
         .max_by(|x, y| x.len().cmp(&y.len()))
         .unwrap()
@@ -51,7 +49,7 @@ fn main() {
         .map(|(x, _)| x)
         .sum::<i32>();
 
-    println!("Part 3: {:?}", result);
+    println!("Quest 1 part 3: {:?}", result);
 }
 
 fn parse(file: String) -> Vec<(i32, Vec<i32>)> {

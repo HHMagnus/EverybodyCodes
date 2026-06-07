@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 
 fn main() {
-    let file = read_to_string("input/part2.txt").unwrap();
+    let file = read_to_string("input/quest1/part2.txt").unwrap();
 
     let input = file.lines().map(|line| {
         let mut split = line.split(":");
@@ -28,5 +28,5 @@ fn main() {
         .max_by(|(_, a), (_, b)| a[3].cmp(&b[3]) .then_with(|| (b[0] + b[1] + b[2]).cmp(&(a[0] + a[1] + a[2]))))
         .unwrap()
         .0;
-    println!("Part 2: {}", result);
+    println!("Quest 1 part 2: {}", result);
 }
