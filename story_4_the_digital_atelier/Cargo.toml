@@ -1,0 +1,6 @@
+[package]
+name = "story_4_the_digital_atelier"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
