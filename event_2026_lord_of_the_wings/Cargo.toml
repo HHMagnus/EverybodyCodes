@@ -1,0 +1,6 @@
+[package]
+name = "event_2026_lord_of_the_wings"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
