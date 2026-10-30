@@ -77,16 +77,13 @@ fn main() {
     scoring.sort();
     scoring.reverse();
 
-    let mut pos = 1;
     let part3 = scoring.into_iter()
         .as_slice()
         .chunk_by(|ch, ch2| ch == ch2)
-        .map(|chunk| {
-            let position = pos;
-            for _ in 0..chunk.len() {
-                pos += 1;
-            }
-            chunk.into_iter().map(|ch| position * ch).sum::<u32>()
+        .scan(1u32, |pos, chunk| {
+            let position = *pos;
+            *pos += chunk.len() as u32;
+            Some(chunk.into_iter().map(|ch| position * ch).sum::<u32>())
         })
         .sum::<u32>();
 
