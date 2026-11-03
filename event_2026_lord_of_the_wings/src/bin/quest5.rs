@@ -19,7 +19,12 @@ fn main() {
     let (matrix3, max_x, max_y) = parse(file3);
     let part3land = land(matrix3.clone(), max_x, max_y);
     let part3sand = sand(max_x, max_y, part3land.clone());
+    let part3trees = trees(max_x, max_y, part3land, part3sand);
 
+    println!("Part 3: {}", part3trees.len());
+}
+
+fn trees(max_x: usize, max_y: usize, part3land: HashSet<(usize, usize)>, part3sand: HashSet<(usize, usize)>) -> HashSet<(usize, usize)> {
     let mut trees = HashSet::new();
     for _ in 0..3 {
         let new_trees = part3land.iter()
@@ -49,8 +54,7 @@ fn main() {
 
         trees.extend(new_trees);
     }
-
-    println!("Part 3: {}", trees.len());
+    trees
 }
 
 fn sand(max_x: usize, max_y: usize, part2land: HashSet<(usize, usize)>) -> HashSet<(usize, usize)> {
