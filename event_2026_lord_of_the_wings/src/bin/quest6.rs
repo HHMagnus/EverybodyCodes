@@ -54,8 +54,7 @@ fn uses_of<'a>(parsed: &HashMap<&'a str, Vec<&str>>, null: &&'a str) -> Vec<&'a 
 
         let search = parsed.iter()
             .filter(|(_, i)| i.contains(cand))
-            .map(|(i, _)| i)
-            .collect::<Vec<_>>();
+            .map(|(i, _)| i);
 
         cands.extend(search);
     }
@@ -78,7 +77,6 @@ fn part1() {
         }
 
         total.push(*x);
-
 
         if let Some(ingredients) = parsed.get(x) {
             queue.extend(ingredients.iter())
