@@ -1,30 +1,6 @@
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
-#[derive(Clone, Debug)]
-struct Cloud {
-    id: u32,
-    energy: u32,
-    connections: Vec<u32>
-}
-
-impl Cloud {
-    fn parse(line: &str) -> Cloud {
-        let mut split = line.split(", ");
-        let id = split.next().unwrap().replace("id=", "").parse().unwrap();
-        let energy = split.next().unwrap().replace("energy=", "").parse().unwrap();
-        let connections = split.next().unwrap().replace("connections=", "")
-            .split(",")
-            .map(|s| s.parse().unwrap()).collect::<Vec<u32>>();
-
-        Cloud {
-            id,
-            energy,
-            connections
-        }
-    }
-}
-
 fn main() {
     let file = read_to_string("input/quest7/input1.txt").unwrap();
 
@@ -52,6 +28,30 @@ fn main() {
         .unwrap();
 
     println!("Part 3: {}", part3);
+}
+
+#[derive(Clone, Debug)]
+struct Cloud {
+    id: u32,
+    energy: u32,
+    connections: Vec<u32>
+}
+
+impl Cloud {
+    fn parse(line: &str) -> Cloud {
+        let mut split = line.split(", ");
+        let id = split.next().unwrap().replace("id=", "").parse().unwrap();
+        let energy = split.next().unwrap().replace("energy=", "").parse().unwrap();
+        let connections = split.next().unwrap().replace("connections=", "")
+            .split(",")
+            .map(|s| s.parse().unwrap()).collect::<Vec<u32>>();
+
+        Cloud {
+            id,
+            energy,
+            connections
+        }
+    }
 }
 
 fn total_start_at_most_connections(file: String, power: u32) -> u32 {
