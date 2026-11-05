@@ -1,22 +1,57 @@
+use std::collections::VecDeque;
 use std::fs::read_to_string;
 
 fn main() {
     let file = read_to_string("input/quest8/input1.txt").unwrap();
     let matrix = parse(file);
-    let part1 = down_right(&matrix);
+    let part1 = down_right(&matrix).len();
 
     println!("Part 1: {}", part1);
 
     let file = read_to_string("input/quest8/input2.txt").unwrap();
     let matrix = parse(file);
-    let part2 = down_right(&matrix)
-        + down_left(&matrix)
-        + run_left(&matrix)
-        + up_left(&matrix)
-        + up_right(&matrix)
-        + run_right(&matrix);
+    let part2 = down_right(&matrix).len()
+        + down_left(&matrix).len()
+        + run_left(&matrix).len()
+        + up_left(&matrix).len()
+        + up_right(&matrix).len()
+        + run_right(&matrix).len();
 
     println!("Part 2: {}", part2);
+
+    let file = read_to_string("input/quest8/input3.txt").unwrap();
+    let mut matrix = parse(file);
+    let mut cycle = vec![down_right, down_left, run_left, up_left, up_right, run_right]
+        .into_iter().cycle();
+
+    let mut total_energy = 0;
+    let mut warriors_grown = 0;
+    let mut seeds = VecDeque::new();
+
+    while warriors_grown < 100000 {
+        let energy_hits = cycle.next().unwrap()(&matrix);
+        total_energy += energy_hits.len();
+        for energy_hit in &energy_hits {
+            let energy = matrix[energy_hit.1 as usize][energy_hit.0 as usize].unwrap();
+            let new_energy = if energy == 9 {
+                seeds.push_back((energy_hit.clone(), 0));
+                warriors_grown += 1;
+                Some(i32::MIN)
+            } else {
+                Some(energy + 1)
+            };
+            matrix[energy_hit.1 as usize][energy_hit.0 as usize] = new_energy
+        }
+        for i in 0..seeds.len() {
+            seeds[i].1 += 1;
+        }
+        while seeds.len() > 0 && seeds[0].1 == 4 {
+            let coord = seeds.pop_front().unwrap().0;
+            matrix[coord.1 as usize][coord.0 as usize] = Some(1);
+        }
+    }
+
+    println!("Part 3: {}", total_energy);
 }
 
 fn top(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
@@ -43,7 +78,7 @@ fn left(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
         .collect()
 }
 
-fn down_right(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn down_right(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (1, 1);
     let mut left = left(matrix);
     let top = top(matrix);
@@ -51,7 +86,7 @@ fn down_right(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
     run_rays(left, direction, matrix)
 }
 
-fn down_left(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn down_left(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (-1, 1);
     let mut right = right(matrix);
     let top = top(matrix);
@@ -59,12 +94,12 @@ fn down_left(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
     run_rays(right, direction, matrix)
 }
 
-fn run_left(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn run_left(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (-1, 0);
     run_rays(right(matrix), direction, matrix)
 }
 
-fn up_left(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn up_left(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (-1, -1);
     let mut right = right(matrix);
     let bottom = bottom(matrix);
@@ -72,7 +107,7 @@ fn up_left(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
     run_rays(right, direction, matrix)
 }
 
-fn up_right(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn up_right(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (1, -1);
     let mut left = left(matrix);
     let bottom = bottom(matrix);
@@ -80,7 +115,7 @@ fn up_right(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
     run_rays(left, direction, matrix)
 }
 
-fn run_right(matrix: &Vec<Vec<Option<i32>>>) -> u32 {
+fn run_right(matrix: &Vec<Vec<Option<i32>>>) -> Vec<(i32, i32)> {
     let direction = (1, 0);
     run_rays(left(&matrix), direction, matrix)
 }
@@ -94,17 +129,17 @@ fn parse(file: String) -> Vec<Vec<Option<i32>>> {
         .collect::<Vec<_>>()
 }
 
-fn run_rays(mut starts: Vec<(i32, i32)>, direction: (i32, i32), matrix: &[Vec<Option<i32>>]) -> u32 {
+fn run_rays(mut starts: Vec<(i32, i32)>, direction: (i32, i32), matrix: &[Vec<Option<i32>>]) -> Vec<(i32, i32)> {
     starts.sort();
     starts.dedup();
     starts.into_iter()
-        .map(|(x, y)| ray_hit((x, y), direction, &matrix, 0))
-        .sum()
+        .flat_map(|(x, y)| ray_hit((x, y), direction, &matrix, 0))
+        .collect()
 }
 
-fn ray_hit((x, y): (i32, i32), direction: (i32, i32), matrix: &[Vec<Option<i32>>], shadow: i32) -> u32 {
+fn ray_hit((x, y): (i32, i32), direction: (i32, i32), matrix: &[Vec<Option<i32>>], shadow: i32) -> Vec<(i32, i32)> {
     if x < 0 || y < 0 || matrix.len() as i32 <= y || matrix[y as usize].len() as i32 <= x {
-        return 0;
+        return Vec::new();
     }
 
     let this = matrix[y as usize][x as usize];
@@ -118,8 +153,10 @@ fn ray_hit((x, y): (i32, i32), direction: (i32, i32), matrix: &[Vec<Option<i32>>
     let this = this.unwrap();
 
     if this > shadow {
-        1 + ray_hit(next, direction, matrix, this - 1)
+        let mut array = ray_hit(next, direction, matrix, this - 1);
+        array.push((x, y));
+        array
     } else {
-        0 + ray_hit(next, direction, matrix, shadow - 1)
+        ray_hit(next, direction, matrix, shadow - 1)
     }
 }
