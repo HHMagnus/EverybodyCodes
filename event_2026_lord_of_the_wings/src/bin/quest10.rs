@@ -38,51 +38,90 @@ fn move_ghost((x, y): (usize, usize), direction: Direction) -> (usize, usize) {
 }
 
 fn main() {
+    part1();
+    part2();
+}
+
+fn part1() {
     let file = read_to_string("input/quest10/input1.txt").unwrap();
-
     let matrix = parse(file);
+    let null_ghosts = find_null_ghosts(&matrix);
 
-    let mut null_ghosts = matrix.iter()
+    let mut null_ghosts = null_ghosts.into_iter()
+        .map(|(xy, dir)| (xy, dir, 0))
+        .collect::<Vec<_>>();
+
+    for _ in 0..10 {
+        null_ghosts = move_null_ghosts(&matrix, null_ghosts, usize::MAX);
+    }
+
+    let part1 = null_ghosts.iter()
+        .map(|(_, _, collisions)| collisions)
+        .sum::<usize>();
+
+    println!("Part 1: {}", part1);
+}
+
+fn part2() {
+    let file = read_to_string("input/quest10/input2.txt").unwrap();
+    let matrix = parse(file);
+    let null_ghosts = find_null_ghosts(&matrix);
+
+    let mut null_ghosts = null_ghosts.into_iter()
+        .map(|(xy, dir)| (xy, dir, 0))
+        .collect::<Vec<_>>();
+
+    let mut part2 = 0;
+    let disappear = 10000;
+
+    while !null_ghosts.iter().all(|(_,_, collisions)| *collisions == disappear) {
+        null_ghosts = move_null_ghosts(&matrix, null_ghosts, disappear);
+        part2 += 1;
+    }
+
+    println!("Part 2: {}", part2);
+}
+fn move_null_ghosts(matrix: &HashMap<(usize, usize), char>, null_ghosts: Vec<((usize, usize), Direction, usize)>, disappear: usize) -> Vec<((usize, usize), Direction, usize)> {
+    let moved_null_ghosts = null_ghosts.iter()
+        .map(|&(xy, dir, collisions)| {
+            let next = move_ghost(xy, dir);
+            if collisions == disappear {
+                (xy, dir, collisions)
+            } else if matrix[&next] == '#' {
+                (xy, turn90(dir), collisions + 1)
+            } else {
+                (next, dir, collisions)
+            }
+        })
+        .collect::<Vec<_>>();
+    let mut destinations = moved_null_ghosts.iter()
+        .filter_map(|(xy, _, collisions)| if *collisions >= disappear { None } else { Some(*xy) })
+        .collect::<Vec<_>>();
+    destinations.sort();
+    let destinations = destinations.as_slice()
+        .chunk_by(|xy, xy2| xy == xy2)
+        .map(|chunk| (chunk[0], chunk.len()))
+        .collect::<HashMap<_, _>>();
+    let moved_null_ghosts = moved_null_ghosts.into_iter()
+        .map(|(xy, dir, collisions)| if collisions == disappear {
+            (xy, dir, collisions)
+        } else if destinations[&xy] > 1 {
+            (xy, turn180(dir), collisions + 1)
+        } else {
+            (xy, dir, collisions)
+        }).collect::<Vec<_>>();
+    moved_null_ghosts
+}
+
+fn find_null_ghosts(matrix: &HashMap<(usize, usize), char>) -> Vec<((usize, usize), Direction)> {
+    matrix.iter()
         .filter_map(|(&xy, ch)| match ch {
             '^' => Some((xy, Direction::Up)),
             'v' => Some((xy, Direction::Down)),
             '<' => Some((xy, Direction::Left)),
             '>' => Some((xy, Direction::Right)),
             _ => None,
-        }).collect::<Vec<_>>();
-
-    let mut part1 = 0;
-
-    for _ in 0..10 {
-        null_ghosts = null_ghosts.into_iter()
-            .map(|(xy, dir)| {
-                let next = move_ghost(xy, dir);
-                if matrix[&next] == '#' {
-                    part1 += 1;
-                    (xy, turn90(dir))
-                } else {
-                    (next, dir)
-                }
-            })
-            .collect();
-        let mut destinations = null_ghosts.iter()
-            .map(|(xy, _)| *xy)
-            .collect::<Vec<_>>();
-        destinations.sort();
-        let destinations = destinations.as_slice()
-            .chunk_by(|xy, xy2| xy == xy2)
-            .map(|chunk| (chunk[0], chunk.len()))
-            .collect::<HashMap<_, _>>();
-        null_ghosts = null_ghosts.into_iter()
-            .map(|(xy, dir)| if destinations[&xy] > 1 {
-                part1 += 1;
-                (xy, turn180(dir))
-            } else {
-                (xy, dir)
-            }).collect();
-    }
-
-    println!("Part 1: {}", part1);
+        }).collect::<Vec<_>>()
 }
 
 fn parse(file: String) -> HashMap<(usize, usize), char> {
