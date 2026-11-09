@@ -1,8 +1,10 @@
+use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::ptr::null;
 
 #[derive(Clone, Copy, Debug)]
+#[derive(PartialEq, Eq)]
+#[derive(Hash)]
 enum Direction {
     Up,
     Down,
@@ -40,6 +42,7 @@ fn move_ghost((x, y): (usize, usize), direction: Direction) -> (usize, usize) {
 fn main() {
     part1();
     part2();
+    part3();
 }
 
 fn part1() {
@@ -48,7 +51,7 @@ fn part1() {
     let null_ghosts = find_null_ghosts(&matrix);
 
     let mut null_ghosts = null_ghosts.into_iter()
-        .map(|(xy, dir)| (xy, dir, 0))
+        .map(|(xy, dir)| (0, xy, dir, 0))
         .collect::<Vec<_>>();
 
     for _ in 0..10 {
@@ -56,7 +59,7 @@ fn part1() {
     }
 
     let part1 = null_ghosts.iter()
-        .map(|(_, _, collisions)| collisions)
+        .map(|(_, _, _, collisions)| collisions)
         .sum::<usize>();
 
     println!("Part 1: {}", part1);
@@ -68,34 +71,104 @@ fn part2() {
     let null_ghosts = find_null_ghosts(&matrix);
 
     let mut null_ghosts = null_ghosts.into_iter()
-        .map(|(xy, dir)| (xy, dir, 0))
+        .map(|(xy, dir)| (0, xy, dir, 0))
         .collect::<Vec<_>>();
 
     let mut part2 = 0;
     let disappear = 10000;
 
-    while !null_ghosts.iter().all(|(_,_, collisions)| *collisions == disappear) {
+    while !null_ghosts.iter().all(|(_, _,_, collisions)| *collisions == disappear) {
         null_ghosts = move_null_ghosts(&matrix, null_ghosts, disappear);
         part2 += 1;
     }
 
     println!("Part 2: {}", part2);
 }
-fn move_null_ghosts(matrix: &HashMap<(usize, usize), char>, null_ghosts: Vec<((usize, usize), Direction, usize)>, disappear: usize) -> Vec<((usize, usize), Direction, usize)> {
+
+fn part3() {
+    let file = read_to_string("input/quest10/input3.txt").unwrap();
+    let matrix = parse(file);
+    let null_ghosts = find_null_ghosts(&matrix);
+
+    let mut null_ghosts = null_ghosts.into_iter()
+        .enumerate()
+        .map(|(id, (xy, dir))| (id, xy, dir, 0usize))
+        .collect::<Vec<_>>();
+
+    let mut rounds = 0;
+    let disappear = 1000000000000;
+
+    let mut cycles: HashMap<Vec<(usize, (usize, usize), Direction)>, Vec<(usize, Vec<(usize, (usize, usize), Direction, usize)>)>> = HashMap::new();
+
+    let mut len = 0;
+    'outer: while !null_ghosts.iter().all(|(_, _,_, collisions)| *collisions == disappear) {
+        if len != null_ghosts.len() {
+            println!("Null ghost disappeared: {}, {}", rounds, null_ghosts.len());
+            len = null_ghosts.len();
+        }
+        let key = null_ghosts.iter()
+            .map(|&(id, xy, dir, _)| (id, xy, dir))
+            .collect::<Vec<_>>();
+        if cycles.contains_key(&key) {
+            let prevs = cycles.get(&key).unwrap();
+            for (prev_rounds, prev) in prevs {
+                let collision_diff = null_ghosts.iter()
+                    .map(|&(id, xy, dir, collisions)| {
+                        let prev_collision = prev.iter()
+                            .find(|&&(id2, _, _, _)| id == id2)
+                            .unwrap();
+                        let diff = collisions - prev_collision.3;
+                        if diff == 0 {
+                            (id, xy, dir, collisions, 0, usize::MAX)
+                        } else {
+                            let can_be_added = (disappear - collisions - 1) / diff;
+                            (id, xy, dir, collisions, diff, can_be_added)
+                        }
+                    }).collect::<Vec<_>>();
+                let move_by = collision_diff.iter()
+                    .map(|(_, _, _, _, _, can_be_added)| *can_be_added)
+                    .min()
+                    .unwrap();
+
+                if move_by > 0 && move_by != usize::MAX {
+                    rounds += (rounds - prev_rounds) * move_by;
+                    null_ghosts = collision_diff.into_iter()
+                        .map(|(id, xy, dir, collisions, diff, _)| (id, xy, dir, collisions+diff*move_by))
+                        .filter(|(_, _, _, collisions)| collisions < &disappear)
+                        .collect();
+                    continue 'outer;
+                }
+            }
+        }
+
+        cycles.entry(key).or_insert(vec![])
+            .push((rounds, null_ghosts.clone()));
+
+        null_ghosts = move_null_ghosts(&matrix, null_ghosts, disappear)
+            .into_iter()
+            .filter(|(_, _, _, collisions)| collisions < &disappear)
+            .collect();
+        rounds += 1;
+    }
+
+    println!("Part 3: {}", rounds);
+}
+
+fn move_null_ghosts(matrix: &HashMap<(usize, usize), char>, null_ghosts: Vec<(usize, (usize, usize), Direction, usize)>, disappear: usize) -> Vec<(usize, (usize, usize), Direction, usize)> {
     let moved_null_ghosts = null_ghosts.iter()
-        .map(|&(xy, dir, collisions)| {
+        .map(|&(id, xy, dir, collisions)| {
             let next = move_ghost(xy, dir);
             if collisions == disappear {
-                (xy, dir, collisions)
+                (id, xy, dir, collisions)
             } else if matrix[&next] == '#' {
-                (xy, turn90(dir), collisions + 1)
+                (id, xy, turn90(dir), collisions + 1)
             } else {
-                (next, dir, collisions)
+                (id, next, dir, collisions)
             }
         })
         .collect::<Vec<_>>();
     let mut destinations = moved_null_ghosts.iter()
-        .filter_map(|(xy, _, collisions)| if *collisions >= disappear { None } else { Some(*xy) })
+        .filter_map(|(_, xy, _, collisions)| if *collisions >= disappear { None } else { Some(*xy) })
         .collect::<Vec<_>>();
     destinations.sort();
     let destinations = destinations.as_slice()
@@ -103,12 +176,12 @@ fn move_null_ghosts(matrix: &HashMap<(usize, usize), char>, null_ghosts: Vec<((u
         .map(|chunk| (chunk[0], chunk.len()))
         .collect::<HashMap<_, _>>();
     let moved_null_ghosts = moved_null_ghosts.into_iter()
-        .map(|(xy, dir, collisions)| if collisions == disappear {
-            (xy, dir, collisions)
+        .map(|(id, xy, dir, collisions)| if collisions == disappear {
+            (id, xy, dir, collisions)
         } else if destinations[&xy] > 1 {
-            (xy, turn180(dir), collisions + 1)
+            (id, xy, turn180(dir), collisions + 1)
         } else {
-            (xy, dir, collisions)
+            (id, xy, dir, collisions)
         }).collect::<Vec<_>>();
     moved_null_ghosts
 }
