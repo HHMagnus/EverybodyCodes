@@ -2,19 +2,14 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::read_to_string;
 
 fn main() {
+    part1();
+    part2();
+}
+
+fn part1() {
     let file = read_to_string("input/quest11/input1.txt").unwrap();
 
-    let mut split = file.split("\n\n");
-    let portals = split.next().unwrap()
-        .replace("portals: ", "")
-        .parse::<u32>()
-        .unwrap();
-    let shortcuts = split.next().unwrap()
-        .lines()
-        .map(|line| {
-            let mut split = line.split(" ");
-            (split.next().unwrap().parse::<u32>().unwrap(), split.next().unwrap().parse::<u32>().unwrap())
-        }).collect::<Vec<_>>();
+    let (portals, shortcuts) = parse(file);
 
     let mut connections = (1..=portals).into_iter().collect::<Vec<_>>()
         .into_iter()
@@ -31,10 +26,73 @@ fn main() {
     let strain_after = (1..=portals).into_iter()
         .map(|x| bfs(x, &connections))
         .sum::<u32>();
-    
+
     let resonance = strain_before - strain_after;
 
     println!("Part 1: {} - {} = {}", strain_before, strain_after, resonance);
+}
+
+fn part2() {
+    let file = read_to_string("input/quest11/input2.txt").unwrap();
+
+    let (portals, shortcuts) = parse(file);
+
+    let mut connections = (1..=portals).into_iter().collect::<Vec<_>>()
+        .into_iter()
+        .as_slice()
+        .windows(4)
+        .flat_map(|line| vec![(line[0], line[1]), (line[0], line[2]), (line[0], line[3])])
+        .collect::<Vec<_>>();
+    connections.push((1, portals));
+    connections.push((1, portals - 1));
+    connections.push((1, portals - 2));
+    connections.push((2, portals));
+    connections.push((2, portals - 1));
+    connections.push((3, portals));
+    connections.push((portals, portals - 2));
+    connections.push((portals, portals - 1));
+    connections.push((portals - 1, portals - 2));
+
+    let strain_before = bfs(1, &connections) * portals;
+
+    connections.extend(shortcuts);
+
+    let mut strain_after = u32::MAX;
+
+    for i in 1..=portals {
+        for j in i+1..=portals {
+            if connections.contains(&(i, j)) || connections.contains(&(j, i)) {
+                continue;
+            }
+            let mut con = connections.clone();
+            con.push((i, j));
+
+            let strain = (1..=portals).into_iter()
+                .map(|x| bfs(x, &con))
+                .sum::<u32>();
+
+            strain_after = strain_after.min(strain);
+        }
+    }
+
+    let resonance = strain_before - strain_after;
+
+    println!("Part 2: {} - {} = {}", strain_before, strain_after, resonance);
+}
+
+fn parse(file: String) -> (u32, Vec<(u32, u32)>) {
+    let mut split = file.split("\n\n");
+    let portals = split.next().unwrap()
+        .replace("portals: ", "")
+        .parse::<u32>()
+        .unwrap();
+    let shortcuts = split.next().unwrap()
+        .lines()
+        .map(|line| {
+            let mut split = line.split(" ");
+            (split.next().unwrap().parse::<u32>().unwrap(), split.next().unwrap().parse::<u32>().unwrap())
+        }).collect::<Vec<_>>();
+    (portals, shortcuts)
 }
 
 fn bfs(start: u32, connections: &Vec<(u32, u32)>) -> u32 {
