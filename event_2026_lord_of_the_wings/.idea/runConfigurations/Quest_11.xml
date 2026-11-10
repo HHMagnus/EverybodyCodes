@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Quest 11" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="buildProfileId" value="release" />
     <option name="command" value="run --bin quest11" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />

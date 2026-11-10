@@ -4,6 +4,7 @@ use std::fs::read_to_string;
 fn main() {
     part1();
     part2();
+    part3();
 }
 
 fn part1() {
@@ -37,21 +38,7 @@ fn part2() {
 
     let (portals, shortcuts) = parse(file);
 
-    let mut connections = (1..=portals).into_iter().collect::<Vec<_>>()
-        .into_iter()
-        .as_slice()
-        .windows(4)
-        .flat_map(|line| vec![(line[0], line[1]), (line[0], line[2]), (line[0], line[3])])
-        .collect::<Vec<_>>();
-    connections.push((1, portals));
-    connections.push((1, portals - 1));
-    connections.push((1, portals - 2));
-    connections.push((2, portals));
-    connections.push((2, portals - 1));
-    connections.push((3, portals));
-    connections.push((portals, portals - 2));
-    connections.push((portals, portals - 1));
-    connections.push((portals - 1, portals - 2));
+    let mut connections = three_apart_ring(portals);
 
     let strain_before = bfs(1, &connections) * portals;
 
@@ -78,6 +65,83 @@ fn part2() {
     let resonance = strain_before - strain_after;
 
     println!("Part 2: {} - {} = {}", strain_before, strain_after, resonance);
+}
+
+fn three_apart_ring(portals: u32) -> Vec<(u32, u32)> {
+    let mut connections = (1..=portals).into_iter().collect::<Vec<_>>()
+        .into_iter()
+        .as_slice()
+        .windows(4)
+        .flat_map(|line| vec![(line[0], line[1]), (line[0], line[2]), (line[0], line[3])])
+        .collect::<Vec<_>>();
+    connections.push((1, portals));
+    connections.push((1, portals - 1));
+    connections.push((1, portals - 2));
+    connections.push((2, portals));
+    connections.push((2, portals - 1));
+    connections.push((3, portals));
+    connections.push((portals, portals - 2));
+    connections.push((portals, portals - 1));
+    connections.push((portals - 1, portals - 2));
+    connections
+}
+
+fn part3() {
+    let file = read_to_string("input/quest11/input3.txt").unwrap();
+
+    let (portals, shortcuts) = parse(file);
+
+    let mut connections = three_apart_ring(portals);
+
+    let strain_before = bfs(1, &connections) * portals;
+
+    connections.extend(shortcuts);
+
+    let mut strain_after = u32::MAX;
+
+    let crystal_separation = portals / 8;
+
+    for offset in 1..=8 {
+        let crystals = (0..8).into_iter()
+            .map(|x| x * crystal_separation + offset)
+            .collect::<Vec<_>>();
+
+        for pairing in pairings(&crystals) {
+            let mut con = connections.clone();
+            con.extend(pairing);
+
+            let strain = (1..=portals).into_iter()
+                .map(|x| bfs(x, &con))
+                .sum::<u32>();
+
+            strain_after = strain_after.min(strain);
+        }
+    }
+
+    let resonance = strain_before - strain_after;
+
+    println!("Part 3: {} - {} = {}", strain_before, strain_after, resonance);
+}
+
+fn pairings(crystals: &Vec<u32>) -> Vec<Vec<(u32, u32)>> {
+    if crystals.len() < 2 {
+        return vec![vec![]];
+    }
+
+    let first = crystals[0];
+    let mut result = Vec::new();
+
+    for i in 1..crystals.len() {
+        let mut rest = crystals[1..].to_vec();
+        let partner = rest.remove(i - 1);
+
+        for mut tail in pairings(&rest) {
+            tail.insert(0, (first, partner));
+            result.push(tail);
+        }
+    }
+
+    result
 }
 
 fn parse(file: String) -> (u32, Vec<(u32, u32)>) {
